@@ -75,6 +75,8 @@ export interface Post {
   org_id: string;
   campaign_id?: string;
   channel_id?: string;
+  client_id?: string;
+  company_id?: string;
   status: PostStatus;
   title: string;
   content?: string;

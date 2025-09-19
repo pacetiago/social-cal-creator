@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Post, Channel, Campaign, PostStatus } from '@/types/multi-tenant';
+import { useClients, Client } from '@/hooks/useClients';
+import { useCompanies, Company } from '@/hooks/useCompanies';
 import { CalendarIcon, Save, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -20,6 +22,7 @@ interface ModernPostFormProps {
   channels: Channel[];
   campaigns: Campaign[];
   defaultDate?: Date;
+  orgId?: string;
 }
 
 export function ModernPostForm({ 
@@ -29,14 +32,20 @@ export function ModernPostForm({
   initialData, 
   channels, 
   campaigns,
-  defaultDate 
+  defaultDate,
+  orgId 
 }: ModernPostFormProps) {
+  const { clients } = useClients(orgId);
+  const [selectedClientId, setSelectedClientId] = useState(initialData?.client_id || '');
+  const { companies } = useCompanies(selectedClientId || undefined);
   const [formData, setFormData] = useState({
     title: initialData?.title || '',
     content: initialData?.content || '',
     status: (initialData?.status || 'idea') as PostStatus,
     channel_id: initialData?.channel_id || '',
     campaign_id: initialData?.campaign_id || '',
+    client_id: initialData?.client_id || '',
+    company_id: initialData?.company_id || '',
     publish_at: initialData?.publish_at ? new Date(initialData.publish_at) : defaultDate || null,
     theme: initialData?.theme || '',
     persona: initialData?.persona || '',
@@ -60,6 +69,8 @@ export function ModernPostForm({
         status: formData.status,
         channel_id: formData.channel_id || null,
         campaign_id: formData.campaign_id || null,
+        client_id: formData.client_id || null,
+        company_id: formData.company_id || null,
         publish_at: formData.publish_at?.toISOString() || null,
         theme: formData.theme,
         persona: formData.persona,
@@ -87,11 +98,14 @@ export function ModernPostForm({
       status: 'idea',
       channel_id: '',
       campaign_id: '',
+      client_id: '',
+      company_id: '',
       publish_at: null,
       theme: '',
       persona: '',
       insights: ''
     });
+    setSelectedClientId('');
     onClose();
   };
 
@@ -117,6 +131,56 @@ export function ModernPostForm({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="client">Cliente</Label>
+              <Select
+                value={formData.client_id}
+                onValueChange={(value) => {
+                  setFormData(prev => ({ ...prev, client_id: value, company_id: '' }));
+                  setSelectedClientId(value);
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione um cliente..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {clients.map((client) => (
+                    <SelectItem key={client.id} value={client.id}>
+                      {client.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="company">Empresa</Label>
+              <Select
+                value={formData.company_id}
+                onValueChange={(value) => setFormData(prev => ({ ...prev, company_id: value }))}
+                disabled={!selectedClientId}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione uma empresa..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {companies.map((company) => (
+                    <SelectItem key={company.id} value={company.id}>
+                      <div className="flex items-center gap-2">
+                        <div 
+                          className="w-3 h-3 rounded-full"
+                          style={{ backgroundColor: company.color }}
+                        />
+                        {company.name}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <Label htmlFor="status">Status</Label>
               <Select
@@ -163,9 +227,7 @@ export function ModernPostForm({
                 </PopoverContent>
               </Popover>
             </div>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="channel">Canal</Label>
               <Select
@@ -179,25 +241,6 @@ export function ModernPostForm({
                   {channels.map((channel) => (
                     <SelectItem key={channel.id} value={channel.id}>
                       {channel.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="campaign">Campanha</Label>
-              <Select
-                value={formData.campaign_id}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, campaign_id: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione uma campanha..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {campaigns.map((campaign) => (
-                    <SelectItem key={campaign.id} value={campaign.id}>
-                      {campaign.name}
                     </SelectItem>
                   ))}
                 </SelectContent>

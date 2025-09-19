@@ -280,6 +280,7 @@ export default function ClientCalendar() {
           channels={channels}
           campaigns={campaigns}
           defaultDate={defaultDate}
+          orgId={organization?.id}
         />
       </main>
     </div>
