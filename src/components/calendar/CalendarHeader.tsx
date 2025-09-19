@@ -54,7 +54,7 @@ export function CalendarHeader({
           </div>
         </div>
         
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex flex-col sm:flex-row gap-3 items-center">
           <div className="flex rounded-lg bg-white/50 p-1">
             <Button
               variant={currentView === 'calendar' ? 'default' : 'ghost'}
