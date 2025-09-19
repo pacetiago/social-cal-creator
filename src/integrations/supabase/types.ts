@@ -507,6 +507,9 @@ export type Database = {
           org_id: string
           persona: string | null
           publish_at: string | null
+          responsibility:
+            | Database["public"]["Enums"]["post_responsibility"]
+            | null
           status: Database["public"]["Enums"]["post_status"] | null
           tags: string[] | null
           theme: string | null
@@ -531,6 +534,9 @@ export type Database = {
           org_id: string
           persona?: string | null
           publish_at?: string | null
+          responsibility?:
+            | Database["public"]["Enums"]["post_responsibility"]
+            | null
           status?: Database["public"]["Enums"]["post_status"] | null
           tags?: string[] | null
           theme?: string | null
@@ -555,6 +561,9 @@ export type Database = {
           org_id?: string
           persona?: string | null
           publish_at?: string | null
+          responsibility?:
+            | Database["public"]["Enums"]["post_responsibility"]
+            | null
           status?: Database["public"]["Enums"]["post_status"] | null
           tags?: string[] | null
           theme?: string | null
@@ -640,6 +649,10 @@ export type Database = {
         Args: { client_id: string }
         Returns: boolean
       }
+      create_org_with_owner: {
+        Args: { org_name: string; org_slug: string }
+        Returns: string
+      }
       get_current_user_role: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -664,6 +677,7 @@ export type Database = {
       editorial_line: "SAZONAL" | "INSTITUCIONAL" | "BLOG" | "ROTEIRO"
       filter_type: "theme" | "persona" | "tag"
       media_type: "Imagem" | "Vídeo" | "Carrossel" | "Texto blog"
+      post_responsibility: "client" | "agency"
       post_status:
         | "idea"
         | "draft"
@@ -807,6 +821,7 @@ export const Constants = {
       editorial_line: ["SAZONAL", "INSTITUCIONAL", "BLOG", "ROTEIRO"],
       filter_type: ["theme", "persona", "tag"],
       media_type: ["Imagem", "Vídeo", "Carrossel", "Texto blog"],
+      post_responsibility: ["client", "agency"],
       post_status: [
         "idea",
         "draft",
