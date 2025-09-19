@@ -17,7 +17,7 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 215 20% 25%;
 
-    --primary: 142 71% 45%;
+    --primary: 0 45% 35%;
     --primary-foreground: 0 0% 98%;
 
     --secondary: 204 94% 94%;
@@ -34,18 +34,18 @@ All colors MUST be HSL.
 
     --border: 214 32% 91%;
     --input: 214 32% 91%;
-    --ring: 142 71% 45%;
+    --ring: 0 45% 35%;
 
     --radius: 0.75rem;
 
     /* Brand Colors */
     --brand-blue: 204 94% 55%;
-    --brand-green: 142 71% 45%;
+    --brand-marsala: 0 45% 35%;
     --brand-orange: 25 95% 53%;
     --brand-purple: 262 83% 58%;
 
     /* Editorial Line Colors */
-    --editorial-sazonal: 142 71% 45%;
+    --editorial-sazonal: 0 45% 35%;
     --editorial-institucional: 204 94% 55%;
     --editorial-blog: 25 95% 53%;
 
@@ -56,9 +56,9 @@ All colors MUST be HSL.
     --site: 25 95% 53%;
 
     /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(var(--brand-green)), hsl(var(--brand-blue)));
+    --gradient-primary: linear-gradient(135deg, hsl(var(--brand-marsala)), hsl(var(--brand-blue)));
     --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(210 40% 98%));
-    --gradient-hero: linear-gradient(135deg, hsl(var(--brand-blue) / 0.1), hsl(var(--brand-green) / 0.1));
+    --gradient-hero: linear-gradient(135deg, hsl(var(--brand-blue) / 0.1), hsl(var(--brand-marsala) / 0.1));
 
     /* Shadows */
     --shadow-soft: 0 4px 20px hsl(var(--foreground) / 0.08);
@@ -96,7 +96,7 @@ All colors MUST be HSL.
     --popover: 222 84% 5%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 142 71% 45%;
+    --primary: 0 45% 35%;
     --primary-foreground: 0 0% 98%;
 
     --secondary: 217 33% 18%;
@@ -116,9 +116,9 @@ All colors MUST be HSL.
     --ring: 212 27% 84%;
 
     /* Dark mode adjustments */
-    --gradient-primary: linear-gradient(135deg, hsl(var(--brand-green) / 0.8), hsl(var(--brand-blue) / 0.8));
+    --gradient-primary: linear-gradient(135deg, hsl(var(--brand-marsala) / 0.8), hsl(var(--brand-blue) / 0.8));
     --gradient-card: linear-gradient(145deg, hsl(217 33% 18%), hsl(217 33% 15%));
-    --gradient-hero: linear-gradient(135deg, hsl(var(--brand-blue) / 0.2), hsl(var(--brand-green) / 0.2));
+    --gradient-hero: linear-gradient(135deg, hsl(var(--brand-blue) / 0.2), hsl(var(--brand-marsala) / 0.2));
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
