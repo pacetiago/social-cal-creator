@@ -9,6 +9,8 @@ import { PostForm } from "@/components/calendar/PostForm";
 import { CalendarPDFExport } from "@/components/calendar/CalendarPDFExport";
 import { UserMenu } from "@/components/UserMenu";
 import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
+import { LogIn } from "lucide-react";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useSupabaseClients } from "@/hooks/useSupabaseClients";
 import { useSupabaseCalendarPosts } from "@/hooks/useSupabaseCalendarPosts";
@@ -141,12 +143,19 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-6 max-w-7xl">
-        {user && (
-          <div className="flex justify-between items-center mb-6">
-            <div></div>
+        <div className="flex justify-between items-center mb-6">
+          <div></div>
+          {user ? (
             <UserMenu />
-          </div>
-        )}
+          ) : (
+            <Button asChild>
+              <a href="/auth">
+                <LogIn className="h-4 w-4 mr-2" />
+                Login
+              </a>
+            </Button>
+          )}
+        </div>
         <CalendarHeader 
           onAddPost={handleAddPost}
           currentView={currentView}
