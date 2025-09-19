@@ -14,7 +14,137 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      calendar_posts: {
+        Row: {
+          channels: Database["public"]["Enums"]["channel_type"][]
+          client_id: string | null
+          company_id: string | null
+          content: string
+          created_at: string | null
+          day: number
+          editorial_line: Database["public"]["Enums"]["editorial_line"]
+          id: string
+          insight: string | null
+          media_type: Database["public"]["Enums"]["media_type"]
+          month: number
+          networks: Database["public"]["Enums"]["social_network"][]
+          responsibility: Database["public"]["Enums"]["responsibility_type"]
+          subject: string
+          updated_at: string | null
+          year: number
+        }
+        Insert: {
+          channels?: Database["public"]["Enums"]["channel_type"][]
+          client_id?: string | null
+          company_id?: string | null
+          content: string
+          created_at?: string | null
+          day: number
+          editorial_line: Database["public"]["Enums"]["editorial_line"]
+          id?: string
+          insight?: string | null
+          media_type: Database["public"]["Enums"]["media_type"]
+          month: number
+          networks?: Database["public"]["Enums"]["social_network"][]
+          responsibility: Database["public"]["Enums"]["responsibility_type"]
+          subject: string
+          updated_at?: string | null
+          year: number
+        }
+        Update: {
+          channels?: Database["public"]["Enums"]["channel_type"][]
+          client_id?: string | null
+          company_id?: string | null
+          content?: string
+          created_at?: string | null
+          day?: number
+          editorial_line?: Database["public"]["Enums"]["editorial_line"]
+          id?: string
+          insight?: string | null
+          media_type?: Database["public"]["Enums"]["media_type"]
+          month?: number
+          networks?: Database["public"]["Enums"]["social_network"][]
+          responsibility?: Database["public"]["Enums"]["responsibility_type"]
+          subject?: string
+          updated_at?: string | null
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_posts_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calendar_posts_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clients: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      companies: {
+        Row: {
+          client_id: string | null
+          color: string
+          created_at: string | null
+          group_name: string | null
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          client_id?: string | null
+          color: string
+          created_at?: string | null
+          group_name?: string | null
+          id: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          client_id?: string | null
+          color?: string
+          created_at?: string | null
+          group_name?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "companies_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +153,11 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      channel_type: "Feed" | "Story" | "Feed e Story" | "Site"
+      editorial_line: "SAZONAL" | "INSTITUCIONAL" | "BLOG" | "ROTEIRO"
+      media_type: "Imagem" | "Vídeo" | "Carrossel" | "Texto blog"
+      responsibility_type: "Agência" | "Cliente"
+      social_network: "Facebook" | "Instagram" | "LinkedIn" | "Site"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +284,12 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      channel_type: ["Feed", "Story", "Feed e Story", "Site"],
+      editorial_line: ["SAZONAL", "INSTITUCIONAL", "BLOG", "ROTEIRO"],
+      media_type: ["Imagem", "Vídeo", "Carrossel", "Texto blog"],
+      responsibility_type: ["Agência", "Cliente"],
+      social_network: ["Facebook", "Instagram", "LinkedIn", "Site"],
+    },
   },
 } as const
