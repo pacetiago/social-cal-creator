@@ -53,6 +53,17 @@ export function CalendarGrid({ posts, onPostClick, month, year, companies }: Cal
     }
   };
 
+  const getResponsibilityColor = (responsibility: string) => {
+    switch (responsibility) {
+      case 'Agência':
+        return 'bg-blue-500';
+      case 'Cliente':
+        return 'bg-orange-500';
+      default:
+        return 'bg-gray-500';
+    }
+  };
+
   const renderCalendarDays = () => {
     const days = [];
     
@@ -94,6 +105,10 @@ export function CalendarGrid({ posts, onPostClick, month, year, companies }: Cal
                         className="w-2 h-2 rounded-full flex-shrink-0"
                         style={{ backgroundColor: getCompanyColor(post.companyId) }}
                       />
+                      <div 
+                        className={cn("w-2 h-2 rounded-sm flex-shrink-0", getResponsibilityColor(post.responsibility))}
+                        title={`Responsabilidade: ${post.responsibility}`}
+                      />
                       {post.subject}
                     </div>
                     <div className="flex flex-wrap gap-1">
@@ -130,22 +145,43 @@ export function CalendarGrid({ posts, onPostClick, month, year, companies }: Cal
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-soft p-6">
-      {/* Header with days of the week */}
-      <div className="grid grid-cols-7 gap-4 mb-4">
-        {daysOfWeek.map((day) => (
-          <div
-            key={day}
-            className="text-center font-semibold text-muted-foreground py-2"
-          >
-            {day}
-          </div>
-        ))}
+    <div className="space-y-6">
+      <div className="bg-white rounded-lg shadow-soft p-6">
+        {/* Header with days of the week */}
+        <div className="grid grid-cols-7 gap-4 mb-4">
+          {daysOfWeek.map((day) => (
+            <div
+              key={day}
+              className="text-center font-semibold text-muted-foreground py-2"
+            >
+              {day}
+            </div>
+          ))}
+        </div>
+
+        {/* Calendar grid */}
+        <div className="grid grid-cols-7 gap-4">
+          {renderCalendarDays()}
+        </div>
       </div>
 
-      {/* Calendar grid */}
-      <div className="grid grid-cols-7 gap-4">
-        {renderCalendarDays()}
+      {/* Legend */}
+      <div className="bg-white rounded-lg shadow-soft p-4">
+        <h3 className="text-sm font-semibold text-foreground mb-3">Legenda</h3>
+        <div className="flex flex-wrap gap-4 text-xs">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-sm bg-blue-500"></div>
+            <span className="text-muted-foreground">Responsabilidade: Agência</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-sm bg-orange-500"></div>
+            <span className="text-muted-foreground">Responsabilidade: Cliente</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-gray-400"></div>
+            <span className="text-muted-foreground">Empresa</span>
+          </div>
+        </div>
       </div>
     </div>
   );
