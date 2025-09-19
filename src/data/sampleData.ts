@@ -4,6 +4,10 @@ export const samplePosts: CalendarPost[] = [
   {
     id: "1",
     day: 2,
+    month: 9, // October (0-indexed)
+    year: 2025,
+    clientId: "austa",
+    companyId: "austa-hospital",
     networks: ["Facebook", "Instagram"],
     channels: ["Feed", "Story"],
     mediaType: "Imagem",
@@ -16,6 +20,10 @@ export const samplePosts: CalendarPost[] = [
   {
     id: "2",
     day: 8,
+    month: 9,
+    year: 2025,
+    clientId: "austa",
+    companyId: "austa-clinicas",
     networks: ["Site", "Facebook", "Instagram", "LinkedIn"],
     channels: ["Site", "Feed", "Story"],
     mediaType: "Texto blog",
@@ -29,6 +37,10 @@ export const samplePosts: CalendarPost[] = [
   {
     id: "3",
     day: 10,
+    month: 9,
+    year: 2025,
+    clientId: "austa",
+    companyId: "austa-laboratorio",
     networks: ["Facebook", "Instagram", "LinkedIn"],
     channels: ["Feed", "Story"],
     mediaType: "Carrossel",
@@ -42,6 +54,10 @@ export const samplePosts: CalendarPost[] = [
   {
     id: "4",
     day: 12,
+    month: 9,
+    year: 2025,
+    clientId: "austa",
+    companyId: "austa-imagem",
     networks: ["Facebook", "Instagram", "LinkedIn"],
     channels: ["Feed", "Story"],
     mediaType: "Imagem",
@@ -54,6 +70,10 @@ export const samplePosts: CalendarPost[] = [
   {
     id: "5",
     day: 15,
+    month: 9,
+    year: 2025,
+    clientId: "austa",
+    companyId: "austa-hospital",
     networks: ["Facebook", "Instagram", "LinkedIn"],
     channels: ["Feed", "Story"],
     mediaType: "Imagem",
@@ -66,6 +86,10 @@ export const samplePosts: CalendarPost[] = [
   {
     id: "6",
     day: 18,
+    month: 9,
+    year: 2025,
+    clientId: "austa",
+    companyId: "austa-clinicas",
     networks: ["Facebook", "Instagram", "LinkedIn"],
     channels: ["Feed", "Story"],
     mediaType: "Carrossel",

@@ -8,6 +8,7 @@ import { PostModal } from "@/components/calendar/PostModal";
 import { PostForm } from "@/components/calendar/PostForm";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { samplePosts } from "@/data/sampleData";
+import { sampleClients, getClientById, getCompanyById, getAllCompanies } from "@/data/clientsData";
 
 const Index = () => {
   const [posts, setPosts] = useLocalStorage<CalendarPost[]>('calendar-posts', samplePosts);
@@ -15,13 +16,31 @@ const Index = () => {
   const [selectedPost, setSelectedPost] = useState<CalendarPost | null>(null);
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [currentMonth, setCurrentMonth] = useState(9); // October (0-indexed)
+  const [currentYear, setCurrentYear] = useState(2025);
+  const [selectedClientId, setSelectedClientId] = useLocalStorage<string>('selected-client', 'austa');
+  const [selectedCompanyId, setSelectedCompanyId] = useLocalStorage<string>('selected-company', 'austa-hospital');
   const [filters, setFilters] = useState<FiltersType>({
+    clientId: selectedClientId,
+    companyId: selectedCompanyId,
     networks: [],
     editorialLines: [],
     mediaTypes: [],
   });
 
+  const selectedClient = getClientById(selectedClientId);
+  const selectedCompany = getCompanyById(selectedClientId, selectedCompanyId);
+  const allCompanies = getAllCompanies();
+
   const filteredPosts = posts.filter(post => {
+    // Filter by selected client and company
+    const clientMatch = !filters.clientId || post.clientId === filters.clientId;
+    const companyMatch = !filters.companyId || post.companyId === filters.companyId;
+    
+    // Filter by month/year
+    const dateMatch = post.month === currentMonth && post.year === currentYear;
+    
+    // Filter by additional criteria
     const networkMatch = filters.networks.length === 0 || 
       filters.networks.some(network => post.networks.includes(network));
     
@@ -31,8 +50,19 @@ const Index = () => {
     const mediaMatch = filters.mediaTypes.length === 0 || 
       filters.mediaTypes.includes(post.mediaType);
     
-    return networkMatch && editorialMatch && mediaMatch;
+    return clientMatch && companyMatch && dateMatch && networkMatch && editorialMatch && mediaMatch;
   });
+
+  const handleClientChange = (clientId: string) => {
+    setSelectedClientId(clientId);
+    setSelectedCompanyId(''); // Reset company when client changes
+    setFilters(prev => ({ ...prev, clientId, companyId: '' }));
+  };
+
+  const handleCompanyChange = (companyId: string) => {
+    setSelectedCompanyId(companyId);
+    setFilters(prev => ({ ...prev, companyId }));
+  };
 
   const handleAddPost = () => {
     setIsFormOpen(true);
@@ -62,11 +92,20 @@ const Index = () => {
           onAddPost={handleAddPost}
           currentView={currentView}
           onViewChange={setCurrentView}
+          selectedClient={selectedClient}
+          selectedCompany={selectedCompany}
+          currentMonth={currentMonth}
+          currentYear={currentYear}
         />
 
         <CalendarFilters 
           filters={filters}
           onFiltersChange={setFilters}
+          clients={sampleClients}
+          selectedClient={selectedClient}
+          selectedCompany={selectedCompany}
+          onClientChange={handleClientChange}
+          onCompanyChange={handleCompanyChange}
         />
 
         <div className="mt-6">
@@ -74,8 +113,9 @@ const Index = () => {
             <CalendarGrid
               posts={filteredPosts}
               onPostClick={handlePostClick}
-              month={9} // October (0-indexed)
-              year={2025}
+              month={currentMonth}
+              year={currentYear}
+              companies={allCompanies}
             />
           ) : (
             <CalendarAnalytics posts={filteredPosts} />
@@ -89,12 +129,16 @@ const Index = () => {
             setIsPostModalOpen(false);
             setSelectedPost(null);
           }}
+          companies={allCompanies}
         />
 
         <PostForm
           isOpen={isFormOpen}
           onClose={() => setIsFormOpen(false)}
           onSave={handleSavePost}
+          clients={sampleClients}
+          defaultClientId={selectedClientId}
+          defaultCompanyId={selectedCompanyId}
         />
       </div>
     </div>

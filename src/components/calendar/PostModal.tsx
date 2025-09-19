@@ -1,4 +1,4 @@
-import { CalendarPost } from "@/types/calendar";
+import { CalendarPost, Company } from "@/types/calendar";
 import {
   Dialog,
   DialogContent,
@@ -8,17 +8,24 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Card } from "@/components/ui/card";
-import { Calendar, Image, MessageSquare, Target } from "lucide-react";
+import { Calendar, Image, MessageSquare, Target, Building2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface PostModalProps {
   post: CalendarPost | null;
   isOpen: boolean;
   onClose: () => void;
+  companies: Company[];
 }
 
-export function PostModal({ post, isOpen, onClose }: PostModalProps) {
+export function PostModal({ post, isOpen, onClose, companies }: PostModalProps) {
   if (!post) return null;
+
+  const company = companies.find(c => c.id === post.companyId);
+  const monthNames = [
+    'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+  ];
 
   const getEditorialLineColor = (line: string) => {
     switch (line) {
@@ -56,14 +63,41 @@ export function PostModal({ post, isOpen, onClose }: PostModalProps) {
             <Calendar className="h-6 w-6 text-primary" />
             {post.subject}
           </DialogTitle>
-          <p className="text-muted-foreground">
-            Outubro {post.day}, 2025
-          </p>
+          <div className="flex items-center gap-2">
+            <p className="text-muted-foreground">
+              {monthNames[post.month]} {post.day}, {post.year}
+            </p>
+            {company && (
+              <div className="flex items-center gap-2">
+                <div 
+                  className="w-3 h-3 rounded-full"
+                  style={{ backgroundColor: company.color }}
+                />
+                <span className="text-sm text-muted-foreground">{company.name}</span>
+              </div>
+            )}
+          </div>
         </DialogHeader>
 
         <div className="space-y-6">
           {/* Metadata Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {company && (
+              <Card className="p-4 bg-gradient-card">
+                <div className="flex items-center gap-2 mb-3">
+                  <Building2 className="h-4 w-4 text-primary" />
+                  <h3 className="font-semibold text-foreground">Empresa</h3>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div 
+                    className="w-4 h-4 rounded-full"
+                    style={{ backgroundColor: company.color }}
+                  />
+                  <span className="text-sm font-medium">{company.name}</span>
+                </div>
+              </Card>
+            )}
+
             <Card className="p-4 bg-gradient-card">
               <div className="flex items-center gap-2 mb-3">
                 <Target className="h-4 w-4 text-primary" />

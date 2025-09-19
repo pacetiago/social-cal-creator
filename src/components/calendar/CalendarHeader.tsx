@@ -1,23 +1,63 @@
 import { Calendar, BarChart3, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Client, Company } from "@/types/calendar";
 
 interface CalendarHeaderProps {
   onAddPost: () => void;
   currentView: 'calendar' | 'analytics';
   onViewChange: (view: 'calendar' | 'analytics') => void;
+  selectedClient?: Client;
+  selectedCompany?: Company;
+  currentMonth: number;
+  currentYear: number;
 }
 
-export function CalendarHeader({ onAddPost, currentView, onViewChange }: CalendarHeaderProps) {
+export function CalendarHeader({ 
+  onAddPost, 
+  currentView, 
+  onViewChange, 
+  selectedClient, 
+  selectedCompany,
+  currentMonth,
+  currentYear
+}: CalendarHeaderProps) {
+  const monthNames = [
+    'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+  ];
+
+  const getDisplayTitle = () => {
+    if (selectedClient && selectedCompany) {
+      return `${selectedCompany.name} - ${selectedClient.name}`;
+    }
+    if (selectedClient) {
+      return selectedClient.name;
+    }
+    return "Cronograma de Redes Sociais";
+  };
+
+  const getDisplaySubtitle = () => {
+    return `${monthNames[currentMonth]} ${currentYear}`;
+  };
   return (
     <header className="bg-gradient-hero rounded-lg p-6 mb-6 shadow-soft">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-3xl md:text-4xl font-bold text-foreground">
-            Cronograma de Redes Sociais
+            {getDisplayTitle()}
           </h1>
-          <p className="text-lg text-muted-foreground mt-2">
-            Austa - Outubro 2025
-          </p>
+          <div className="flex items-center gap-2 mt-2">
+            <p className="text-lg text-muted-foreground">
+              {getDisplaySubtitle()}
+            </p>
+            {selectedCompany && (
+              <div 
+                className="w-4 h-4 rounded-full border-2 border-white shadow-sm"
+                style={{ backgroundColor: selectedCompany.color }}
+                title={`Cor da empresa: ${selectedCompany.name}`}
+              />
+            )}
+          </div>
         </div>
         
         <div className="flex flex-col sm:flex-row gap-3">

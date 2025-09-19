@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CalendarPost, SocialNetwork, EditorialLine, MediaType, ChannelType } from "@/types/calendar";
+import { CalendarPost, SocialNetwork, EditorialLine, MediaType, ChannelType, Client, Company } from "@/types/calendar";
 import {
   Dialog,
   DialogContent,
@@ -19,13 +19,16 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card } from "@/components/ui/card";
-import { Save, X } from "lucide-react";
+import { Save, X, Users, Building2 } from "lucide-react";
 
 interface PostFormProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (post: Omit<CalendarPost, 'id' | 'createdAt' | 'updatedAt'>) => void;
   initialData?: CalendarPost | null;
+  clients: Client[];
+  defaultClientId?: string;
+  defaultCompanyId?: string;
 }
 
 const socialNetworks: SocialNetwork[] = ['Facebook', 'Instagram', 'LinkedIn', 'Site'];
@@ -33,9 +36,13 @@ const editorialLines: EditorialLine[] = ['SAZONAL', 'INSTITUCIONAL', 'BLOG'];
 const mediaTypes: MediaType[] = ['Imagem', 'Vídeo', 'Carrossel', 'Texto blog'];
 const channelTypes: ChannelType[] = ['Feed', 'Story', 'Feed e Story', 'Site'];
 
-export function PostForm({ isOpen, onClose, onSave, initialData }: PostFormProps) {
+export function PostForm({ isOpen, onClose, onSave, initialData, clients, defaultClientId, defaultCompanyId }: PostFormProps) {
   const [formData, setFormData] = useState({
     day: initialData?.day || 1,
+    month: initialData?.month || 9, // October (0-indexed)
+    year: initialData?.year || 2025,
+    clientId: initialData?.clientId || defaultClientId || '',
+    companyId: initialData?.companyId || defaultCompanyId || '',
     networks: initialData?.networks || [],
     channels: initialData?.channels || [],
     mediaType: initialData?.mediaType || '' as MediaType,
@@ -45,10 +52,12 @@ export function PostForm({ isOpen, onClose, onSave, initialData }: PostFormProps
     insight: initialData?.insight || '',
   });
 
+  const selectedClient = clients.find(c => c.id === formData.clientId);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.mediaType || !formData.editorialLine || !formData.subject || !formData.content) {
+    if (!formData.mediaType || !formData.editorialLine || !formData.subject || !formData.content || !formData.clientId || !formData.companyId) {
       return;
     }
 
@@ -66,6 +75,10 @@ export function PostForm({ isOpen, onClose, onSave, initialData }: PostFormProps
   const handleClose = () => {
     setFormData({
       day: 1,
+      month: 9,
+      year: 2025,
+      clientId: defaultClientId || '',
+      companyId: defaultCompanyId || '',
       networks: [],
       channels: [],
       mediaType: '' as MediaType,
@@ -105,6 +118,62 @@ export function PostForm({ isOpen, onClose, onSave, initialData }: PostFormProps
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Client and Company Selection */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="client" className="flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                Cliente
+              </Label>
+              <Select
+                value={formData.clientId}
+                onValueChange={(value) => setFormData(prev => ({ ...prev, clientId: value, companyId: '' }))}
+                required
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o cliente..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {clients.map((client) => (
+                    <SelectItem key={client.id} value={client.id}>
+                      {client.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="company" className="flex items-center gap-2">
+                <Building2 className="h-4 w-4" />
+                Empresa
+              </Label>
+              <Select
+                value={formData.companyId}
+                onValueChange={(value) => setFormData(prev => ({ ...prev, companyId: value }))}
+                disabled={!selectedClient}
+                required
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione a empresa..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {selectedClient?.companies.map((company) => (
+                    <SelectItem key={company.id} value={company.id}>
+                      <div className="flex items-center gap-2">
+                        <div 
+                          className="w-3 h-3 rounded-full"
+                          style={{ backgroundColor: company.color }}
+                        />
+                        {company.name}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
           {/* Day */}
           <div>
             <Label htmlFor="day">Dia do Mês</Label>

@@ -1,4 +1,4 @@
-import { CalendarPost } from "@/types/calendar";
+import { CalendarPost, Company } from "@/types/calendar";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -8,12 +8,18 @@ interface CalendarGridProps {
   onPostClick: (post: CalendarPost) => void;
   month: number;
   year: number;
+  companies: Company[];
 }
 
-export function CalendarGrid({ posts, onPostClick, month, year }: CalendarGridProps) {
+export function CalendarGrid({ posts, onPostClick, month, year, companies }: CalendarGridProps) {
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstDayOfMonth = new Date(year, month, 1).getDay();
   const daysOfWeek = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+
+  const getCompanyColor = (companyId: string) => {
+    const company = companies.find(c => c.id === companyId);
+    return company?.color || '#64748B';
+  };
 
   const getPostsForDay = (day: number) => {
     return posts.filter(post => post.day === day);
@@ -83,7 +89,11 @@ export function CalendarGrid({ posts, onPostClick, month, year }: CalendarGridPr
                     onClick={() => onPostClick(post)}
                     className="group cursor-pointer"
                   >
-                    <div className="text-xs font-medium text-foreground/80 truncate mb-1 group-hover:text-primary">
+                    <div className="text-xs font-medium text-foreground/80 truncate mb-1 group-hover:text-primary flex items-center gap-1">
+                      <div 
+                        className="w-2 h-2 rounded-full flex-shrink-0"
+                        style={{ backgroundColor: getCompanyColor(post.companyId) }}
+                      />
                       {post.subject}
                     </div>
                     <div className="flex flex-wrap gap-1">

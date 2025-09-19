@@ -1,4 +1,4 @@
-import { CalendarFilters as FiltersType, SocialNetwork, EditorialLine, MediaType } from "@/types/calendar";
+import { CalendarFilters as FiltersType, SocialNetwork, EditorialLine, MediaType, Client, Company } from "@/types/calendar";
 import {
   Select,
   SelectContent,
@@ -9,18 +9,31 @@ import {
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Filter, X } from "lucide-react";
+import { Filter, X, Building2, Users } from "lucide-react";
 
 interface CalendarFiltersProps {
   filters: FiltersType;
   onFiltersChange: (filters: FiltersType) => void;
+  clients: Client[];
+  selectedClient?: Client;
+  selectedCompany?: Company;
+  onClientChange: (clientId: string) => void;
+  onCompanyChange: (companyId: string) => void;
 }
 
 const socialNetworks: SocialNetwork[] = ['Facebook', 'Instagram', 'LinkedIn', 'Site'];
 const editorialLines: EditorialLine[] = ['SAZONAL', 'INSTITUCIONAL', 'BLOG'];
 const mediaTypes: MediaType[] = ['Imagem', 'Vídeo', 'Carrossel', 'Texto blog'];
 
-export function CalendarFilters({ filters, onFiltersChange }: CalendarFiltersProps) {
+export function CalendarFilters({ 
+  filters, 
+  onFiltersChange, 
+  clients, 
+  selectedClient, 
+  selectedCompany,
+  onClientChange,
+  onCompanyChange 
+}: CalendarFiltersProps) {
   const hasActiveFilters = filters.networks.length > 0 || filters.editorialLines.length > 0 || filters.mediaTypes.length > 0;
 
   const clearAllFilters = () => {
@@ -102,7 +115,57 @@ export function CalendarFilters({ filters, onFiltersChange }: CalendarFiltersPro
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4 mb-4">
+        {/* Client Filter */}
+        <div>
+          <label className="text-sm font-medium text-foreground mb-2 block flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            Cliente
+          </label>
+          <Select value={selectedClient?.id || ''} onValueChange={onClientChange}>
+            <SelectTrigger>
+              <SelectValue placeholder="Selecionar cliente..." />
+            </SelectTrigger>
+            <SelectContent>
+              {clients.map((client) => (
+                <SelectItem key={client.id} value={client.id}>
+                  {client.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Company Filter */}
+        <div>
+          <label className="text-sm font-medium text-foreground mb-2 block flex items-center gap-2">
+            <Building2 className="h-4 w-4" />
+            Empresa
+          </label>
+          <Select 
+            value={selectedCompany?.id || ''} 
+            onValueChange={onCompanyChange}
+            disabled={!selectedClient}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Selecionar empresa..." />
+            </SelectTrigger>
+            <SelectContent>
+              {selectedClient?.companies.map((company) => (
+                <SelectItem key={company.id} value={company.id}>
+                  <div className="flex items-center gap-2">
+                    <div 
+                      className="w-3 h-3 rounded-full"
+                      style={{ backgroundColor: company.color }}
+                    />
+                    {company.name}
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
         {/* Social Networks Filter */}
         <div>
           <label className="text-sm font-medium text-foreground mb-2 block">
