@@ -40,28 +40,40 @@ export default function AdminUsers() {
     setCreating(true);
 
     try {
-      const { error } = await supabase.auth.admin.createUser({
-        email: newUserData.email,
-        password: newUserData.password,
-        user_metadata: {
-          full_name: newUserData.full_name,
+      // Get the current session to send with the request
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      // Call our edge function to create the user
+      const { data, error } = await supabase.functions.invoke('create-user', {
+        body: {
+          email: newUserData.email,
+          password: newUserData.password,
+          fullName: newUserData.full_name,
+          role: newUserData.role
         },
-        email_confirm: true
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
       });
 
       if (error) throw error;
 
       toast({
-        title: 'Usuário criado',
-        description: 'O usuário foi criado com sucesso.',
+        title: 'Usuário criado com sucesso',
+        description: `${newUserData.full_name} foi adicionado ao sistema.`,
       });
 
       setNewUserData({ email: '', password: '', full_name: '', role: 'user' });
       setShowCreateUser(false);
     } catch (err) {
+      console.error('Error creating user:', err);
       toast({
         title: 'Erro ao criar usuário',
-        description: err instanceof Error ? err.message : 'Erro desconhecido',
+        description: err instanceof Error ? err.message : 'Falha ao criar usuário',
         variant: 'destructive',
       });
     } finally {
