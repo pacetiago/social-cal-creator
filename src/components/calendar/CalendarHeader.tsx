@@ -1,6 +1,8 @@
-import { Calendar, BarChart3, Plus } from "lucide-react";
+import { Calendar, BarChart3, Plus, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Client, Company } from "@/types/calendar";
+import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 
 interface CalendarHeaderProps {
   onAddPost: () => void;
@@ -21,6 +23,8 @@ export function CalendarHeader({
   currentMonth,
   currentYear
 }: CalendarHeaderProps) {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const monthNames = [
     'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
     'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
@@ -76,13 +80,24 @@ export function CalendarHeader({
             </Button>
           </div>
           
-          <Button 
-            onClick={onAddPost}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-medium transition-all duration-300 hover:shadow-strong hover:scale-105"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Nova Postagem
-          </Button>
+          {user ? (
+            <Button 
+              onClick={onAddPost}
+              className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-medium transition-all duration-300 hover:shadow-strong hover:scale-105"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Nova Postagem
+            </Button>
+          ) : (
+            <Button 
+              onClick={() => navigate('/auth')}
+              variant="outline"
+              className="border-white/20 text-foreground hover:bg-white/10"
+            >
+              <LogIn className="h-4 w-4 mr-2" />
+              Fazer Login
+            </Button>
+          )}
         </div>
       </div>
     </header>

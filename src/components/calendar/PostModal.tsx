@@ -1,4 +1,5 @@
 import { CalendarPost, Company } from "@/types/calendar";
+import { useAuth } from "@/hooks/useAuth";
 import {
   Dialog,
   DialogContent,
@@ -33,6 +34,8 @@ interface PostModalProps {
 }
 
 export function PostModal({ post, isOpen, onClose, companies, onDelete }: PostModalProps) {
+  const { user } = useAuth();
+  
   if (!post) return null;
 
   const company = companies.find(c => c.id === post.companyId);
@@ -189,31 +192,33 @@ export function PostModal({ post, isOpen, onClose, companies, onDelete }: PostMo
          </div>
 
          <DialogFooter className="border-t pt-4 mt-6">
-           <AlertDialog>
-             <AlertDialogTrigger asChild>
-               <Button variant="destructive" className="flex items-center gap-2">
-                 <Trash2 className="h-4 w-4" />
-                 Excluir Post
-               </Button>
-             </AlertDialogTrigger>
-             <AlertDialogContent>
-               <AlertDialogHeader>
-                 <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
-                 <AlertDialogDescription>
-                   Tem certeza que deseja excluir este post? Esta ação não pode ser desfeita.
-                 </AlertDialogDescription>
-               </AlertDialogHeader>
-               <AlertDialogFooter>
-                 <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                 <AlertDialogAction 
-                   onClick={() => onDelete(post.id)}
-                   className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                 >
-                   Excluir
-                 </AlertDialogAction>
-               </AlertDialogFooter>
-             </AlertDialogContent>
-           </AlertDialog>
+           {user && (
+             <AlertDialog>
+               <AlertDialogTrigger asChild>
+                 <Button variant="destructive" className="flex items-center gap-2">
+                   <Trash2 className="h-4 w-4" />
+                   Excluir Post
+                 </Button>
+               </AlertDialogTrigger>
+               <AlertDialogContent>
+                 <AlertDialogHeader>
+                   <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+                   <AlertDialogDescription>
+                     Tem certeza que deseja excluir este post? Esta ação não pode ser desfeita.
+                   </AlertDialogDescription>
+                 </AlertDialogHeader>
+                 <AlertDialogFooter>
+                   <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                   <AlertDialogAction 
+                     onClick={() => onDelete(post.id)}
+                     className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                   >
+                     Excluir
+                   </AlertDialogAction>
+                 </AlertDialogFooter>
+               </AlertDialogContent>
+             </AlertDialog>
+           )}
          </DialogFooter>
        </DialogContent>
      </Dialog>

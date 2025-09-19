@@ -8,11 +8,13 @@ import { PostModal } from "@/components/calendar/PostModal";
 import { PostForm } from "@/components/calendar/PostForm";
 import { CalendarPDFExport } from "@/components/calendar/CalendarPDFExport";
 import { UserMenu } from "@/components/UserMenu";
+import { useAuth } from "@/hooks/useAuth";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useSupabaseClients } from "@/hooks/useSupabaseClients";
 import { useSupabaseCalendarPosts } from "@/hooks/useSupabaseCalendarPosts";
 
 const Index = () => {
+  const { user } = useAuth();
   // Supabase hooks
   const { 
     clients, 
@@ -91,6 +93,9 @@ const Index = () => {
   };
 
   const handleAddPost = () => {
+    if (!user) {
+      return; // Don't open form if user is not authenticated
+    }
     setIsFormOpen(true);
   };
 
@@ -109,6 +114,9 @@ const Index = () => {
   };
 
   const handleDeletePost = async (postId: string) => {
+    if (!user) {
+      return; // Don't allow deletion if user is not authenticated
+    }
     try {
       await deletePost(postId);
       setIsPostModalOpen(false);
@@ -133,10 +141,12 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-6 max-w-7xl">
-        <div className="flex justify-between items-center mb-6">
-          <div></div>
-          <UserMenu />
-        </div>
+        {user && (
+          <div className="flex justify-between items-center mb-6">
+            <div></div>
+            <UserMenu />
+          </div>
+        )}
         <CalendarHeader 
           onAddPost={handleAddPost}
           currentView={currentView}
