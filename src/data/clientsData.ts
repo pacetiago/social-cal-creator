@@ -6,27 +6,45 @@ export const sampleClients: Client[] = [
     name: "Grupo Austa",
     companies: [
       {
-        id: "austa-hospital",
-        name: "Austa Hospital",
+        id: "austa-clinica",
+        name: "Austa Clínica",
         color: "#4CAF50", // Verde
         groupName: "Grupo Austa"
       },
       {
-        id: "austa-clinicas",
-        name: "Austa Clínicas", 
+        id: "austa-hospital",
+        name: "Austa Hospital",
         color: "#2196F3", // Azul
         groupName: "Grupo Austa"
       },
       {
-        id: "austa-laboratorio",
-        name: "Austa Laboratório",
+        id: "imc",
+        name: "IMC",
         color: "#FF9800", // Laranja
         groupName: "Grupo Austa"
       },
       {
-        id: "austa-imagem",
-        name: "Austa Imagem",
+        id: "todas-unidades",
+        name: "Todas unidades",
         color: "#9C27B0", // Roxo
+        groupName: "Grupo Austa"
+      },
+      {
+        id: "austa-clinica-imc",
+        name: "Austa Clínica e IMC",
+        color: "#E91E63", // Pink
+        groupName: "Grupo Austa"
+      },
+      {
+        id: "austa-clinica-hospital",
+        name: "Austa Clínica e Hospital",
+        color: "#00BCD4", // Cyan
+        groupName: "Grupo Austa"
+      },
+      {
+        id: "imc-austa-hospital",
+        name: "IMC e Austa Hospital",
+        color: "#795548", // Brown
         groupName: "Grupo Austa"
       }
     ]
@@ -38,12 +56,12 @@ export const sampleClients: Client[] = [
       {
         id: "empresa-exemplo-1",
         name: "Empresa A",
-        color: "#E91E63", // Pink
+        color: "#607D8B", // Blue Grey
       },
       {
         id: "empresa-exemplo-2", 
         name: "Empresa B",
-        color: "#00BCD4", // Cyan
+        color: "#8BC34A", // Light Green
       }
     ]
   }

@@ -1,7 +1,8 @@
 export type SocialNetwork = 'Facebook' | 'Instagram' | 'LinkedIn' | 'Site';
-export type EditorialLine = 'SAZONAL' | 'INSTITUCIONAL' | 'BLOG';
+export type EditorialLine = 'SAZONAL' | 'INSTITUCIONAL' | 'BLOG' | 'ROTEIRO';
 export type MediaType = 'Imagem' | 'Vídeo' | 'Carrossel' | 'Texto blog';
 export type ChannelType = 'Feed' | 'Story' | 'Feed e Story' | 'Site';
+export type ResponsibilityType = 'Agência' | 'Cliente';
 
 export interface Company {
   id: string;
@@ -29,6 +30,7 @@ export interface CalendarPost {
   editorialLine: EditorialLine;
   subject: string;
   content: string;
+  responsibility: ResponsibilityType;
   insight?: string;
   createdAt: Date;
   updatedAt: Date;

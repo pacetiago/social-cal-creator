@@ -13,7 +13,7 @@ export function CalendarAnalytics({ posts }: CalendarAnalyticsProps) {
     const stats: CalendarStats = {
       totalPosts: posts.length,
       postsByNetwork: { Facebook: 0, Instagram: 0, LinkedIn: 0, Site: 0 },
-      postsByEditorialLine: { SAZONAL: 0, INSTITUCIONAL: 0, BLOG: 0 },
+      postsByEditorialLine: { SAZONAL: 0, INSTITUCIONAL: 0, BLOG: 0, ROTEIRO: 0 },
       postsByMediaType: { Imagem: 0, Vídeo: 0, Carrossel: 0, 'Texto blog': 0 },
     };
 
@@ -44,6 +44,8 @@ export function CalendarAnalytics({ posts }: CalendarAnalyticsProps) {
         return 'bg-editorial-institucional';
       case 'BLOG':
         return 'bg-editorial-blog';
+      case 'ROTEIRO':
+        return 'bg-editorial-roteiro';
       default:
         return 'bg-muted';
     }

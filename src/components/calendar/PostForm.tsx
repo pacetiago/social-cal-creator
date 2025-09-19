@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CalendarPost, SocialNetwork, EditorialLine, MediaType, ChannelType, Client, Company } from "@/types/calendar";
+import { CalendarPost, SocialNetwork, EditorialLine, MediaType, ChannelType, Client, Company, ResponsibilityType } from "@/types/calendar";
 import {
   Dialog,
   DialogContent,
@@ -32,7 +32,8 @@ interface PostFormProps {
 }
 
 const socialNetworks: SocialNetwork[] = ['Facebook', 'Instagram', 'LinkedIn', 'Site'];
-const editorialLines: EditorialLine[] = ['SAZONAL', 'INSTITUCIONAL', 'BLOG'];
+const editorialLines: EditorialLine[] = ['SAZONAL', 'INSTITUCIONAL', 'BLOG', 'ROTEIRO'];
+const responsibilityTypes: ResponsibilityType[] = ['Agência', 'Cliente'];
 const mediaTypes: MediaType[] = ['Imagem', 'Vídeo', 'Carrossel', 'Texto blog'];
 const channelTypes: ChannelType[] = ['Feed', 'Story', 'Feed e Story', 'Site'];
 
@@ -49,6 +50,7 @@ export function PostForm({ isOpen, onClose, onSave, initialData, clients, defaul
     editorialLine: initialData?.editorialLine || '' as EditorialLine,
     subject: initialData?.subject || '',
     content: initialData?.content || '',
+    responsibility: initialData?.responsibility || 'Agência' as ResponsibilityType,
     insight: initialData?.insight || '',
   });
 
@@ -67,6 +69,7 @@ export function PostForm({ isOpen, onClose, onSave, initialData, clients, defaul
       channels: formData.channels as ChannelType[],
       mediaType: formData.mediaType as MediaType,
       editorialLine: formData.editorialLine as EditorialLine,
+      responsibility: formData.responsibility as ResponsibilityType,
     });
     
     handleClose();
@@ -85,6 +88,7 @@ export function PostForm({ isOpen, onClose, onSave, initialData, clients, defaul
       editorialLine: '' as EditorialLine,
       subject: '',
       content: '',
+      responsibility: 'Agência' as ResponsibilityType,
       insight: '',
     });
     onClose();
@@ -226,8 +230,8 @@ export function PostForm({ isOpen, onClose, onSave, initialData, clients, defaul
             </div>
           </Card>
 
-          {/* Editorial Line and Media Type */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Editorial Line, Media Type, and Responsibility */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <Label htmlFor="editorialLine">Linha Editorial</Label>
               <Select
@@ -260,6 +264,26 @@ export function PostForm({ isOpen, onClose, onSave, initialData, clients, defaul
                 </SelectTrigger>
                 <SelectContent>
                   {mediaTypes.map((type) => (
+                    <SelectItem key={type} value={type}>
+                      {type}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="responsibility">Responsabilidade</Label>
+              <Select
+                value={formData.responsibility}
+                onValueChange={(value) => setFormData(prev => ({ ...prev, responsibility: value as ResponsibilityType }))}
+                required
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {responsibilityTypes.map((type) => (
                     <SelectItem key={type} value={type}>
                       {type}
                     </SelectItem>

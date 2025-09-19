@@ -27,13 +27,7 @@ export function CalendarHeader({
   ];
 
   const getDisplayTitle = () => {
-    if (selectedClient && selectedCompany) {
-      return `${selectedCompany.name} - ${selectedClient.name}`;
-    }
-    if (selectedClient) {
-      return selectedClient.name;
-    }
-    return "Cronograma de Redes Sociais";
+    return "Cronograma de Social Media";
   };
 
   const getDisplaySubtitle = () => {

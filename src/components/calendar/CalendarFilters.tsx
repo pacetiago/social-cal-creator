@@ -19,10 +19,12 @@ interface CalendarFiltersProps {
   selectedCompany?: Company;
   onClientChange: (clientId: string) => void;
   onCompanyChange: (companyId: string) => void;
+  currentMonth?: number;
+  onMonthChange?: (month: number) => void;
 }
 
 const socialNetworks: SocialNetwork[] = ['Facebook', 'Instagram', 'LinkedIn', 'Site'];
-const editorialLines: EditorialLine[] = ['SAZONAL', 'INSTITUCIONAL', 'BLOG'];
+const editorialLines: EditorialLine[] = ['SAZONAL', 'INSTITUCIONAL', 'BLOG', 'ROTEIRO'];
 const mediaTypes: MediaType[] = ['Imagem', 'Vídeo', 'Carrossel', 'Texto blog'];
 
 export function CalendarFilters({ 
@@ -32,7 +34,9 @@ export function CalendarFilters({
   selectedClient, 
   selectedCompany,
   onClientChange,
-  onCompanyChange 
+  onCompanyChange,
+  currentMonth,
+  onMonthChange
 }: CalendarFiltersProps) {
   const hasActiveFilters = filters.networks.length > 0 || filters.editorialLines.length > 0 || filters.mediaTypes.length > 0;
 
@@ -115,7 +119,7 @@ export function CalendarFilters({
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4 mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-4 mb-4">
         {/* Client Filter */}
         <div>
           <label className="text-sm font-medium text-foreground mb-2 block flex items-center gap-2">
@@ -220,6 +224,28 @@ export function CalendarFilters({
               {mediaTypes.map((type) => (
                 <SelectItem key={type} value={type}>
                   {type}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Month Filter */}
+        <div>
+          <label className="text-sm font-medium text-foreground mb-2 block">
+            Mês
+          </label>
+          <Select value={currentMonth?.toString()} onValueChange={(value) => onMonthChange?.(parseInt(value))}>
+            <SelectTrigger>
+              <SelectValue placeholder="Selecionar mês..." />
+            </SelectTrigger>
+            <SelectContent>
+              {[
+                'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+                'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+              ].map((month, index) => (
+                <SelectItem key={index} value={index.toString()}>
+                  {month}
                 </SelectItem>
               ))}
             </SelectContent>

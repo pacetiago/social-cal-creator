@@ -6,6 +6,7 @@ import { CalendarFilters } from "@/components/calendar/CalendarFilters";
 import { CalendarAnalytics } from "@/components/calendar/CalendarAnalytics";
 import { PostModal } from "@/components/calendar/PostModal";
 import { PostForm } from "@/components/calendar/PostForm";
+import { CalendarPDFExport } from "@/components/calendar/CalendarPDFExport";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { samplePosts } from "@/data/sampleData";
 import { sampleClients, getClientById, getCompanyById, getAllCompanies } from "@/data/clientsData";
@@ -106,17 +107,31 @@ const Index = () => {
           selectedCompany={selectedCompany}
           onClientChange={handleClientChange}
           onCompanyChange={handleCompanyChange}
+          currentMonth={currentMonth}
+          onMonthChange={setCurrentMonth}
         />
 
         <div className="mt-6">
           {currentView === 'calendar' ? (
-            <CalendarGrid
-              posts={filteredPosts}
-              onPostClick={handlePostClick}
-              month={currentMonth}
-              year={currentYear}
-              companies={allCompanies}
-            />
+            <>
+              <div className="flex justify-end mb-4">
+                <CalendarPDFExport
+                  posts={filteredPosts}
+                  companies={allCompanies}
+                  currentMonth={currentMonth}
+                  currentYear={currentYear}
+                  selectedClient={selectedClientId}
+                  selectedCompany={selectedCompanyId}
+                />
+              </div>
+              <CalendarGrid
+                posts={filteredPosts}
+                onPostClick={handlePostClick}
+                month={currentMonth}
+                year={currentYear}
+                companies={allCompanies}
+              />
+            </>
           ) : (
             <CalendarAnalytics posts={filteredPosts} />
           )}
