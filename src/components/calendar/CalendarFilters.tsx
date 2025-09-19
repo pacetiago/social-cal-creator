@@ -1,4 +1,5 @@
 import { CalendarFilters as FiltersType, SocialNetwork, EditorialLine, MediaType, Client, Company } from "@/types/calendar";
+import { useAuth } from "@/hooks/useAuth";
 import {
   Select,
   SelectContent,
@@ -38,6 +39,7 @@ export function CalendarFilters({
   currentMonth,
   onMonthChange
 }: CalendarFiltersProps) {
+  const { user } = useAuth();
   const hasActiveFilters = 
     filters.networks.length > 0 || 
     filters.editorialLines.length > 0 || 
@@ -133,27 +135,32 @@ export function CalendarFilters({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-4 mb-4">
-        {/* Client Filter */}
-        <div>
-          <label className="text-sm font-medium text-foreground mb-2 block flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            Cliente
-          </label>
-          <Select value={selectedClient?.id || ''} onValueChange={onClientChange}>
-            <SelectTrigger>
-              <SelectValue placeholder="Selecionar cliente..." />
-            </SelectTrigger>
-            <SelectContent>
-              {clients.map((client) => (
-                <SelectItem key={client.id} value={client.id}>
-                  {client.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+      {/* Client and Company Filters - Only for authenticated users */}
+      {user && clients.length > 0 && (
+        <>
+          {/* Client Filter */}
+          <div>
+            <label className="text-sm font-medium text-foreground mb-2 block flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Cliente
+            </label>
+            <Select value={selectedClient?.id || ''} onValueChange={onClientChange}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecionar cliente..." />
+              </SelectTrigger>
+              <SelectContent>
+                {clients.map((client) => (
+                  <SelectItem key={client.id} value={client.id}>
+                    {client.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </>
+      )}
 
-        {/* Company Filter */}
+      {user && selectedClient && (
         <div>
           <label className="text-sm font-medium text-foreground mb-2 block flex items-center gap-2">
             <Building2 className="h-4 w-4" />
@@ -182,6 +189,7 @@ export function CalendarFilters({
             </SelectContent>
           </Select>
         </div>
+      )}
 
         {/* Social Networks Filter */}
         <div>

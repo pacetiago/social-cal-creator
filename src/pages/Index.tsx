@@ -169,9 +169,9 @@ const Index = () => {
         <CalendarFilters 
           filters={filters}
           onFiltersChange={setFilters}
-          clients={clients}
-          selectedClient={selectedClient}
-          selectedCompany={selectedCompany}
+          clients={user ? clients : []}
+          selectedClient={user ? selectedClient : undefined}
+          selectedCompany={user ? selectedCompany : undefined}
           onClientChange={handleClientChange}
           onCompanyChange={handleCompanyChange}
           currentMonth={currentMonth}
@@ -184,11 +184,11 @@ const Index = () => {
               <div className="flex justify-end mb-4">
                 <CalendarPDFExport
                   posts={filteredPosts}
-                  companies={allCompanies}
+                  companies={user ? allCompanies : []}
                   currentMonth={currentMonth}
                   currentYear={currentYear}
-                  selectedClient={selectedClientId}
-                  selectedCompany={selectedCompanyId}
+                  selectedClient={user ? selectedClientId : ''}
+                  selectedCompany={user ? selectedCompanyId : ''}
                 />
               </div>
               <CalendarGrid
@@ -196,7 +196,7 @@ const Index = () => {
                 onPostClick={handlePostClick}
                 month={currentMonth}
                 year={currentYear}
-                companies={allCompanies}
+                companies={user ? allCompanies : []}
               />
             </>
           ) : (
@@ -211,7 +211,7 @@ const Index = () => {
             setIsPostModalOpen(false);
             setSelectedPost(null);
           }}
-          companies={allCompanies}
+          companies={user ? allCompanies : []}
           onDelete={handleDeletePost}
         />
 
@@ -219,7 +219,7 @@ const Index = () => {
           isOpen={isFormOpen}
           onClose={() => setIsFormOpen(false)}
           onSave={handleSavePost}
-          clients={clients}
+          clients={user ? clients : []}
           defaultClientId={selectedClientId}
           defaultCompanyId={selectedCompanyId}
         />

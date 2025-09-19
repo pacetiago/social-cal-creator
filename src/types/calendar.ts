@@ -32,6 +32,8 @@ export interface CalendarPost {
   content: string;
   responsibility: ResponsibilityType;
   insight?: string;
+  public_client_name?: string;
+  public_company_name?: string;
   createdAt: Date;
   updatedAt: Date;
 }

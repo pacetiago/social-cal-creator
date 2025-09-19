@@ -39,6 +39,13 @@ export function PostModal({ post, isOpen, onClose, companies, onDelete }: PostMo
   if (!post) return null;
 
   const company = companies.find(c => c.id === post.companyId);
+  
+  // For public users, show generic company info if no company data is available
+  const displayCompany = company || {
+    id: post.companyId,
+    name: post.public_company_name || 'Empresa',
+    color: '#64748B'
+  };
   const monthNames = [
     'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
     'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
@@ -84,7 +91,7 @@ export function PostModal({ post, isOpen, onClose, companies, onDelete }: PostMo
             <p className="text-muted-foreground">
               {monthNames[post.month]} {post.day}, {post.year}
             </p>
-            {company && (
+              {displayCompany && (
               <div className="flex items-center gap-2">
                 <div 
                   className="w-3 h-3 rounded-full"
@@ -99,7 +106,7 @@ export function PostModal({ post, isOpen, onClose, companies, onDelete }: PostMo
         <div className="space-y-6">
           {/* Metadata Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {company && (
+            {displayCompany && (
               <Card className="p-4 bg-gradient-card">
                 <div className="flex items-center gap-2 mb-3">
                   <Building2 className="h-4 w-4 text-primary" />
@@ -108,9 +115,9 @@ export function PostModal({ post, isOpen, onClose, companies, onDelete }: PostMo
                 <div className="flex items-center gap-2">
                   <div 
                     className="w-4 h-4 rounded-full"
-                    style={{ backgroundColor: company.color }}
+                    style={{ backgroundColor: displayCompany.color }}
                   />
-                  <span className="text-sm font-medium">{company.name}</span>
+                  <span className="text-sm font-medium">{displayCompany.name}</span>
                 </div>
               </Card>
             )}

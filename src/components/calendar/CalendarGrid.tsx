@@ -16,9 +16,9 @@ export function CalendarGrid({ posts, onPostClick, month, year, companies }: Cal
   const firstDayOfMonth = new Date(year, month, 1).getDay();
   const daysOfWeek = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
-  const getCompanyColor = (companyId: string) => {
-    const company = companies.find(c => c.id === companyId);
-    return company?.color || '#64748B';
+  const getCompanyColor = (post: CalendarPost) => {
+    const company = companies.find(c => c.id === post.companyId);
+    return company?.color || '#64748B'; // Default gray if no company data
   };
 
   const getPostsForDay = (day: number) => {
@@ -103,7 +103,7 @@ export function CalendarGrid({ posts, onPostClick, month, year, companies }: Cal
                     <div className="text-xs font-medium text-foreground/80 truncate mb-1 group-hover:text-primary flex items-center gap-1">
                       <div 
                         className="w-2 h-2 rounded-full flex-shrink-0"
-                        style={{ backgroundColor: getCompanyColor(post.companyId) }}
+                        style={{ backgroundColor: getCompanyColor(post) }}
                       />
                       <div 
                         className={cn("w-2 h-2 rounded-sm flex-shrink-0", getResponsibilityColor(post.responsibility))}
