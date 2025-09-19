@@ -7,11 +7,24 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Users, Settings } from 'lucide-react';
+import { Search, Users, Settings, UserPlus } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function AdminUsers() {
   const { users, loading, updateUser } = useUsers();
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
+  const [showCreateUser, setShowCreateUser] = useState(false);
+  const [newUserData, setNewUserData] = useState({
+    email: '',
+    password: '',
+    full_name: '',
+    role: 'user'
+  });
+  const [creating, setCreating] = useState(false);
 
   const filteredUsers = users.filter(user =>
     user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -20,6 +33,40 @@ export default function AdminUsers() {
 
   const handleRoleChange = async (userId: string, newRole: string) => {
     await updateUser(userId, { role: newRole });
+  };
+
+  const handleCreateUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCreating(true);
+
+    try {
+      const { error } = await supabase.auth.admin.createUser({
+        email: newUserData.email,
+        password: newUserData.password,
+        user_metadata: {
+          full_name: newUserData.full_name,
+        },
+        email_confirm: true
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Usuário criado',
+        description: 'O usuário foi criado com sucesso.',
+      });
+
+      setNewUserData({ email: '', password: '', full_name: '', role: 'user' });
+      setShowCreateUser(false);
+    } catch (err) {
+      toast({
+        title: 'Erro ao criar usuário',
+        description: err instanceof Error ? err.message : 'Erro desconhecido',
+        variant: 'destructive',
+      });
+    } finally {
+      setCreating(false);
+    }
   };
 
   if (loading) {
@@ -41,6 +88,74 @@ export default function AdminUsers() {
               <h1 className="text-2xl font-bold">Usuários</h1>
               <p className="text-muted-foreground">Gerencie usuários e suas permissões</p>
             </div>
+            <Dialog open={showCreateUser} onOpenChange={setShowCreateUser}>
+              <DialogTrigger asChild>
+                <Button>
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Novo Usuário
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Criar Novo Usuário</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleCreateUser} className="space-y-4">
+                  <div>
+                    <Label htmlFor="full_name">Nome Completo</Label>
+                    <Input
+                      id="full_name"
+                      value={newUserData.full_name}
+                      onChange={(e) => setNewUserData(prev => ({ ...prev, full_name: e.target.value }))}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={newUserData.email}
+                      onChange={(e) => setNewUserData(prev => ({ ...prev, email: e.target.value }))}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="password">Senha</Label>
+                    <Input
+                      id="password"
+                      type="password"
+                      value={newUserData.password}
+                      onChange={(e) => setNewUserData(prev => ({ ...prev, password: e.target.value }))}
+                      required
+                      minLength={6}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="role">Função</Label>
+                    <Select
+                      value={newUserData.role}
+                      onValueChange={(value) => setNewUserData(prev => ({ ...prev, role: value }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="user">Usuário</SelectItem>
+                        <SelectItem value="admin">Administrador</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex justify-end space-x-2">
+                    <Button type="button" variant="outline" onClick={() => setShowCreateUser(false)}>
+                      Cancelar
+                    </Button>
+                    <Button type="submit" disabled={creating}>
+                      {creating ? 'Criando...' : 'Criar Usuário'}
+                    </Button>
+                  </div>
+                </form>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
 

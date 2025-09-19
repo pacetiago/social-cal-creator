@@ -11,6 +11,14 @@ export function useUserOrganizations() {
     try {
       setLoading(true);
       
+      const { data: user } = await supabase.auth.getUser();
+      
+      if (!user.user?.id) {
+        setUserOrganizations([]);
+        setError(null);
+        return;
+      }
+      
       const { data, error: fetchError } = await supabase
         .from('memberships')
         .select(`
@@ -25,7 +33,7 @@ export function useUserOrganizations() {
             updated_by
           )
         `)
-        .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
+        .eq('user_id', user.user.id);
 
       if (fetchError) throw fetchError;
 
