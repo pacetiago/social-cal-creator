@@ -86,6 +86,12 @@ const Index = () => {
     setIsFormOpen(false);
   };
 
+  const handleDeletePost = (postId: string) => {
+    setPosts(prevPosts => prevPosts.filter(post => post.id !== postId));
+    setIsPostModalOpen(false);
+    setSelectedPost(null);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-6 max-w-7xl">
@@ -145,6 +151,7 @@ const Index = () => {
             setSelectedPost(null);
           }}
           companies={allCompanies}
+          onDelete={handleDeletePost}
         />
 
         <PostForm
