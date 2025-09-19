@@ -28,8 +28,6 @@ export type Database = {
           media_type: Database["public"]["Enums"]["media_type"]
           month: number
           networks: Database["public"]["Enums"]["social_network"][]
-          public_client_name: string | null
-          public_company_name: string | null
           responsibility: Database["public"]["Enums"]["responsibility_type"]
           subject: string
           updated_at: string | null
@@ -48,8 +46,6 @@ export type Database = {
           media_type: Database["public"]["Enums"]["media_type"]
           month: number
           networks?: Database["public"]["Enums"]["social_network"][]
-          public_client_name?: string | null
-          public_company_name?: string | null
           responsibility: Database["public"]["Enums"]["responsibility_type"]
           subject: string
           updated_at?: string | null
@@ -68,8 +64,6 @@ export type Database = {
           media_type?: Database["public"]["Enums"]["media_type"]
           month?: number
           networks?: Database["public"]["Enums"]["social_network"][]
-          public_client_name?: string | null
-          public_company_name?: string | null
           responsibility?: Database["public"]["Enums"]["responsibility_type"]
           subject?: string
           updated_at?: string | null

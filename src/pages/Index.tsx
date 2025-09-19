@@ -7,6 +7,7 @@ import { CalendarAnalytics } from "@/components/calendar/CalendarAnalytics";
 import { PostModal } from "@/components/calendar/PostModal";
 import { PostForm } from "@/components/calendar/PostForm";
 import { CalendarPDFExport } from "@/components/calendar/CalendarPDFExport";
+import { PublicEmptyState } from "@/components/PublicEmptyState";
 import { UserMenu } from "@/components/UserMenu";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -179,28 +180,34 @@ const Index = () => {
         />
 
         <div className="mt-6">
-          {currentView === 'calendar' ? (
-            <>
-              <div className="flex justify-end mb-4">
-                <CalendarPDFExport
-                  posts={filteredPosts}
-                  companies={user ? allCompanies : []}
-                  currentMonth={currentMonth}
-                  currentYear={currentYear}
-                  selectedClient={user ? selectedClientId : ''}
-                  selectedCompany={user ? selectedCompanyId : ''}
-                />
-              </div>
-              <CalendarGrid
-                posts={filteredPosts}
-                onPostClick={handlePostClick}
-                month={currentMonth}
-                year={currentYear}
-                companies={user ? allCompanies : []}
-              />
-            </>
+          {!user ? (
+            <PublicEmptyState />
           ) : (
-            <CalendarAnalytics posts={filteredPosts} />
+            <>
+              {currentView === 'calendar' ? (
+                <>
+                  <div className="flex justify-end mb-4">
+                    <CalendarPDFExport
+                      posts={filteredPosts}
+                      companies={user ? allCompanies : []}
+                      currentMonth={currentMonth}
+                      currentYear={currentYear}
+                      selectedClient={user ? selectedClientId : ''}
+                      selectedCompany={user ? selectedCompanyId : ''}
+                    />
+                  </div>
+                  <CalendarGrid
+                    posts={filteredPosts}
+                    onPostClick={handlePostClick}
+                    month={currentMonth}
+                    year={currentYear}
+                    companies={user ? allCompanies : []}
+                  />
+                </>
+              ) : (
+                <CalendarAnalytics posts={filteredPosts} />
+              )}
+            </>
           )}
         </div>
 
