@@ -3,8 +3,11 @@ import { useOrganization } from '@/hooks/useOrganization';
 import { usePosts } from '@/hooks/usePosts';
 import { useChannels } from '@/hooks/useChannels';
 import { useCampaigns } from '@/hooks/useCampaigns';
+import { useClients } from '@/hooks/useClients';
+import { useCompanies } from '@/hooks/useCompanies';
 import { CalendarView } from '@/components/calendar/CalendarView';
 import { ModernPostForm } from '@/components/calendar/ModernPostForm';
+import { ClientFilters } from '@/components/calendar/ClientFilters';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -13,14 +16,22 @@ import { PostStatus, Post } from '@/types/multi-tenant';
 
 export default function ClientCalendar() {
   const { organization, loading: orgLoading, hasAccess, canEdit } = useOrganization();
+  const [selectedClientId, setSelectedClientId] = useState<string>('');
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string>('');
+  
   const { posts, loading: postsLoading, addPost, updatePost } = usePosts({ 
-    orgId: organization?.id 
+    orgId: organization?.id,
+    clientId: selectedClientId || undefined,
+    companyId: selectedCompanyId || undefined
   });
   const { channels } = useChannels(organization?.id);
   const { campaigns } = useCampaigns(organization?.id);
+  const { clients } = useClients(organization?.id);
+  const { companies } = useCompanies(selectedClientId || undefined);
   
   const [view, setView] = useState<'calendar' | 'list'>('calendar');
   const [showPostForm, setShowPostForm] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [defaultDate, setDefaultDate] = useState<Date | undefined>();
 
@@ -104,7 +115,7 @@ export default function ClientCalendar() {
                 <List className="h-4 w-4 mr-2" />
                 Lista
               </Button>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" onClick={() => setShowFilters(!showFilters)}>
                 <Filter className="h-4 w-4 mr-2" />
                 Filtros
               </Button>
@@ -120,122 +131,142 @@ export default function ClientCalendar() {
       </header>
 
       <main className="container mx-auto px-6 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total de Posts</CardTitle>
-              <Grid className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{posts.length}</div>
-              <p className="text-xs text-muted-foreground">Posts nesta organização</p>
-            </CardContent>
-          </Card>
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Main Content */}
+          <div className="lg:col-span-3 space-y-6">
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total de Posts</CardTitle>
+                  <Grid className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{posts.length}</div>
+                  <p className="text-xs text-muted-foreground">Posts nesta organização</p>
+                </CardContent>
+              </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Publicados</CardTitle>
-              <Badge variant="default">Publicado</Badge>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {posts.filter(p => p.status === 'published').length}
-              </div>
-              <p className="text-xs text-muted-foreground">Posts já publicados</p>
-            </CardContent>
-          </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Publicados</CardTitle>
+                  <Badge variant="default">Publicado</Badge>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {posts.filter(p => p.status === 'published').length}
+                  </div>
+                  <p className="text-xs text-muted-foreground">Posts já publicados</p>
+                </CardContent>
+              </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Agendados</CardTitle>
-              <Badge variant="secondary">Agendado</Badge>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {posts.filter(p => p.status === 'scheduled').length}
-              </div>
-              <p className="text-xs text-muted-foreground">Posts agendados</p>
-            </CardContent>
-          </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Agendados</CardTitle>
+                  <Badge variant="secondary">Agendado</Badge>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {posts.filter(p => p.status === 'scheduled').length}
+                  </div>
+                  <p className="text-xs text-muted-foreground">Posts agendados</p>
+                </CardContent>
+              </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Em Revisão</CardTitle>
-              <Badge variant="outline">Revisão</Badge>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {posts.filter(p => p.status === 'review').length}
-              </div>
-              <p className="text-xs text-muted-foreground">Aguardando aprovação</p>
-            </CardContent>
-          </Card>
-        </div>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Em Revisão</CardTitle>
+                  <Badge variant="outline">Revisão</Badge>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {posts.filter(p => p.status === 'review').length}
+                  </div>
+                  <p className="text-xs text-muted-foreground">Aguardando aprovação</p>
+                </CardContent>
+              </Card>
+            </div>
 
-        {view === 'list' ? (
-          <Card>
-            <CardHeader>
-              <CardTitle>Lista de Posts</CardTitle>
-              <CardDescription>
-                Todos os posts organizados por data de criação
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {posts.map((post) => (
-                  <div key={post.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex-1">
-                      <h3 className="font-medium">{post.title}</h3>
-                      <div className="flex items-center space-x-2 mt-1">
-                        <Badge variant={getStatusColor(post.status)}>
-                          {post.status}
-                        </Badge>
-                        {post.channel && (
-                          <Badge variant="outline">
-                            {post.channel.name}
-                          </Badge>
-                        )}
-                        {post.campaign && (
-                          <Badge variant="outline">
-                            {post.campaign.name}
-                          </Badge>
+        {/* Calendar/List Content */}
+            {view === 'list' ? (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Lista de Posts</CardTitle>
+                  <CardDescription>
+                    Todos os posts organizados por data de criação
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {posts.map((post) => (
+                      <div key={post.id} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div className="flex-1">
+                          <h3 className="font-medium">{post.title}</h3>
+                          <div className="flex items-center space-x-2 mt-1">
+                            <Badge variant={getStatusColor(post.status)}>
+                              {post.status}
+                            </Badge>
+                            {post.channel_id && (
+                              <Badge variant="outline">
+                                Canal
+                              </Badge>
+                            )}
+                            {post.campaign_id && (
+                              <Badge variant="outline">
+                                Campanha
+                              </Badge>
+                            )}
+                          </div>
+                          {post.publish_at && (
+                            <p className="text-sm text-muted-foreground mt-1">
+                              Publicar em: {new Date(post.publish_at).toLocaleDateString('pt-BR')}
+                            </p>
+                          )}
+                        </div>
+                        <Button variant="outline" size="sm" onClick={() => handlePostClick(post)}>
+                          Ver detalhes
+                        </Button>
+                      </div>
+                    ))}
+
+                    {posts.length === 0 && (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                        <p>Nenhum post encontrado.</p>
+                        {canEdit && (
+                          <Button className="mt-4" onClick={() => handleCreatePost()}>
+                            <Plus className="h-4 w-4 mr-2" />
+                            Criar primeiro post
+                          </Button>
                         )}
                       </div>
-                      {post.publish_at && (
-                        <p className="text-sm text-muted-foreground mt-1">
-                          Publicar em: {new Date(post.publish_at).toLocaleDateString('pt-BR')}
-                        </p>
-                      )}
-                    </div>
-                    <Button variant="outline" size="sm" onClick={() => handlePostClick(post)}>
-                      Ver detalhes
-                    </Button>
-                  </div>
-                ))}
-
-                {posts.length === 0 && (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>Nenhum post encontrado.</p>
-                    {canEdit && (
-                      <Button className="mt-4" onClick={() => handleCreatePost()}>
-                        <Plus className="h-4 w-4 mr-2" />
-                        Criar primeiro post
-                      </Button>
                     )}
                   </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          <CalendarView
-            posts={posts}
-            onPostClick={handlePostClick}
-            onCreatePost={canEdit ? handleCreatePost : undefined}
-            canEdit={canEdit}
-          />
-        )}
+                </CardContent>
+              </Card>
+            ) : (
+              <CalendarView
+                posts={posts}
+                onPostClick={handlePostClick}
+                onCreatePost={canEdit ? handleCreatePost : undefined}
+                canEdit={canEdit}
+              />
+            )}
+          </div>
+
+          {/* Sidebar with Filters */}
+          {showFilters && (
+            <div className="lg:col-span-1">
+              <ClientFilters
+                orgId={organization?.id}
+                onClientChange={setSelectedClientId}
+                onCompanyChange={setSelectedCompanyId}
+                selectedClientId={selectedClientId}
+                selectedCompanyId={selectedCompanyId}
+              />
+            </div>
+          )}
+        </div>
 
         <ModernPostForm
           isOpen={showPostForm}

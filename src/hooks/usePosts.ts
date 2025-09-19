@@ -8,6 +8,8 @@ interface UsePostsOptions {
   status?: PostStatus[];
   channelId?: string;
   campaignId?: string;
+  clientId?: string;
+  companyId?: string;
 }
 
 export function usePosts(options: UsePostsOptions = {}) {
@@ -45,6 +47,14 @@ export function usePosts(options: UsePostsOptions = {}) {
 
       if (options.campaignId) {
         query = query.eq('campaign_id', options.campaignId);
+      }
+
+      if (options.clientId) {
+        query = query.eq('client_id', options.clientId);
+      }
+
+      if (options.companyId) {
+        query = query.eq('company_id', options.companyId);
       }
 
       const { data, error: fetchError } = await query;
@@ -167,7 +177,7 @@ export function usePosts(options: UsePostsOptions = {}) {
 
   useEffect(() => {
     fetchPosts();
-  }, [options.orgId, options.status?.join(','), options.channelId, options.campaignId]);
+  }, [options.orgId, options.status?.join(','), options.channelId, options.campaignId, options.clientId, options.companyId]);
 
   return {
     posts,
