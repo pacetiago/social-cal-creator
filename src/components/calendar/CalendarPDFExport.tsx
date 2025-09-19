@@ -67,13 +67,13 @@ export function CalendarPDFExport({
             border-collapse: collapse;
             margin-bottom: 30px;
           }
-          .calendar th, .calendar td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            vertical-align: top;
-            width: 14.28%;
-            height: 120px;
-          }
+           .calendar th, .calendar td {
+             border: 1px solid #ddd;
+             padding: 8px;
+             vertical-align: top;
+             width: 14.28%;
+             height: 160px;
+           }
           .calendar th {
             background-color: #f5f5f5;
             text-align: center;
@@ -84,15 +84,15 @@ export function CalendarPDFExport({
             font-weight: bold;
             margin-bottom: 5px;
           }
-          .post {
-            background: ${companyInfo?.color || '#4CAF50'};
-            color: white;
-            padding: 2px 4px;
-            margin: 2px 0;
-            border-radius: 3px;
-            font-size: 10px;
-            word-wrap: break-word;
-          }
+           .post {
+             color: white;
+             padding: 4px 6px;
+             margin: 2px 0;
+             border-radius: 3px;
+             font-size: 8px;
+             word-wrap: break-word;
+             line-height: 1.2;
+           }
           .responsibility-agency {
             background: #2196F3;
           }
@@ -166,7 +166,13 @@ export function CalendarPDFExport({
       
       dayPosts.forEach(post => {
         const responsibilityClass = post.responsibility === 'Agência' ? 'responsibility-agency' : 'responsibility-client';
-        currentWeek += `<div class="post ${responsibilityClass}" title="${post.subject} - ${post.responsibility}">${post.subject}</div>`;
+        const networksText = post.networks.join(', ');
+        currentWeek += `<div class="post ${responsibilityClass}">
+          <strong>${post.subject}</strong><br>
+          <small>Plataforma: ${networksText}</small><br>
+          <small>Conteúdo: ${post.content || 'N/A'}</small><br>
+          <small>Resp.: ${post.responsibility}</small>
+        </div>`;
       });
       
       currentWeek += '</td>';
