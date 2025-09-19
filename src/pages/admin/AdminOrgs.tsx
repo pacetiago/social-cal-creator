@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { useOrganizations } from '@/hooks/useOrganizations';
+import { OrganizationForm } from '@/components/admin/OrganizationForm';
 import { Plus, Search, Settings, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,36 +11,29 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { AdminLayout } from '@/components/AdminLayout';
 
 export default function AdminOrgs() {
+  const { organizations, loading, addOrganization } = useOrganizations();
   const [searchTerm, setSearchTerm] = useState('');
-
-  // Mock data - replace with real data from useOrganizations hook
-  const organizations = [
-    {
-      id: '1',
-      name: 'Demo Agency',
-      slug: 'demo',
-      status: 'active',
-      created_at: '2024-01-15',
-      membersCount: 5,
-      postsCount: 23,
-      campaignsCount: 3
-    },
-    {
-      id: '2',
-      name: 'Varejo Brasil',
-      slug: 'varejo-br',
-      status: 'active',
-      created_at: '2024-01-20',
-      membersCount: 8,
-      postsCount: 45,
-      campaignsCount: 7
-    }
-  ];
+  const [showForm, setShowForm] = useState(false);
 
   const filteredOrgs = organizations.filter(org =>
     org.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     org.slug.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleCreateOrg = async (data: { name: string; slug: string }) => {
+    const result = await addOrganization(data);
+    return result;
+  };
+
+  if (loading) {
+    return (
+      <AdminLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout>
@@ -47,9 +42,9 @@ export default function AdminOrgs() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold">Administração</h1>
-              <p className="text-muted-foreground">Gerencie organizações e configurações da plataforma</p>
+              <p className="text-muted-foreground">Gerencie organizações e clientes da Marsala</p>
             </div>
-            <Button>
+            <Button onClick={() => setShowForm(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Nova Organização
             </Button>
@@ -90,7 +85,7 @@ export default function AdminOrgs() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {organizations.reduce((sum, org) => sum + org.postsCount, 0)}
+                -
               </div>
               <p className="text-xs text-muted-foreground">Todos os posts da plataforma</p>
             </CardContent>
@@ -103,7 +98,7 @@ export default function AdminOrgs() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {organizations.reduce((sum, org) => sum + org.membersCount, 0)}
+                -
               </div>
               <p className="text-xs text-muted-foreground">Todos os membros ativos</p>
             </CardContent>
@@ -156,9 +151,9 @@ export default function AdminOrgs() {
                         {org.status}
                       </Badge>
                     </TableCell>
-                    <TableCell>{org.membersCount}</TableCell>
-                    <TableCell>{org.postsCount}</TableCell>
-                    <TableCell>{org.campaignsCount}</TableCell>
+                    <TableCell>-</TableCell>
+                    <TableCell>-</TableCell>
+                    <TableCell>-</TableCell>
                     <TableCell>
                       {new Date(org.created_at).toLocaleDateString('pt-BR')}
                     </TableCell>
@@ -178,6 +173,12 @@ export default function AdminOrgs() {
             </Table>
           </CardContent>
         </Card>
+
+        <OrganizationForm
+          isOpen={showForm}
+          onClose={() => setShowForm(false)}
+          onSave={handleCreateOrg}
+        />
       </div>
     </AdminLayout>
   );

@@ -14,6 +14,7 @@ import NotFound from "./pages/NotFound";
 // Admin Pages
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminOrgs from "./pages/admin/AdminOrgs";
+import AdminUsers from "./pages/admin/AdminUsers";
 import AdminAudit from "./pages/admin/AdminAudit";
 
 // Client Portal Pages
@@ -47,6 +48,11 @@ const App = () => (
             <Route path="/admin/orgs" element={
               <ProtectedRoute>
                 <AdminOrgs />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/users" element={
+              <ProtectedRoute>
+                <AdminUsers />
               </ProtectedRoute>
             } />
             <Route path="/admin/audit" element={

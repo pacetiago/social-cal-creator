@@ -17,7 +17,7 @@ export default function AdminDashboard() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold">Dashboard Administrativo</h1>
           <p className="text-muted-foreground">
-            Visão geral da plataforma SocialMed Calendar
+            Visão geral do Cronograma Marsala
           </p>
         </div>
 

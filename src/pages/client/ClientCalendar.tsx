@@ -3,22 +3,26 @@ import { useOrganization } from '@/hooks/useOrganization';
 import { usePosts } from '@/hooks/usePosts';
 import { useChannels } from '@/hooks/useChannels';
 import { useCampaigns } from '@/hooks/useCampaigns';
+import { CalendarView } from '@/components/calendar/CalendarView';
+import { ModernPostForm } from '@/components/calendar/ModernPostForm';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, Grid, List, Plus, Filter } from 'lucide-react';
-import { PostStatus } from '@/types/multi-tenant';
+import { PostStatus, Post } from '@/types/multi-tenant';
 
 export default function ClientCalendar() {
   const { organization, loading: orgLoading, hasAccess, canEdit } = useOrganization();
-  const { posts, loading: postsLoading } = usePosts({ 
+  const { posts, loading: postsLoading, addPost, updatePost } = usePosts({ 
     orgId: organization?.id 
   });
   const { channels } = useChannels(organization?.id);
   const { campaigns } = useCampaigns(organization?.id);
   
   const [view, setView] = useState<'calendar' | 'list'>('calendar');
-  const [selectedMonth, setSelectedMonth] = useState(new Date());
+  const [showPostForm, setShowPostForm] = useState(false);
+  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
+  const [defaultDate, setDefaultDate] = useState<Date | undefined>();
 
   if (orgLoading || postsLoading) {
     return (
@@ -55,6 +59,25 @@ export default function ClientCalendar() {
     }
   };
 
+  const handlePostClick = (post: Post) => {
+    setSelectedPost(post);
+    setShowPostForm(true);
+  };
+
+  const handleCreatePost = (date?: Date) => {
+    setSelectedPost(null);
+    setDefaultDate(date);
+    setShowPostForm(true);
+  };
+
+  const handleSavePost = async (postData: Omit<Post, 'id' | 'created_at' | 'updated_at'>) => {
+    if (selectedPost) {
+      await updatePost(selectedPost.id, postData);
+    } else {
+      await addPost(postData);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b">
@@ -86,7 +109,7 @@ export default function ClientCalendar() {
                 Filtros
               </Button>
               {canEdit && (
-                <Button>
+                <Button onClick={() => handleCreatePost()}>
                   <Plus className="h-4 w-4 mr-2" />
                   Novo Post
                 </Button>
@@ -184,7 +207,7 @@ export default function ClientCalendar() {
                         </p>
                       )}
                     </div>
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" onClick={() => handlePostClick(post)}>
                       Ver detalhes
                     </Button>
                   </div>
@@ -195,7 +218,7 @@ export default function ClientCalendar() {
                     <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
                     <p>Nenhum post encontrado.</p>
                     {canEdit && (
-                      <Button className="mt-4">
+                      <Button className="mt-4" onClick={() => handleCreatePost()}>
                         <Plus className="h-4 w-4 mr-2" />
                         Criar primeiro post
                       </Button>
@@ -206,23 +229,27 @@ export default function ClientCalendar() {
             </CardContent>
           </Card>
         ) : (
-          <Card>
-            <CardHeader>
-              <CardTitle>Calendário</CardTitle>
-              <CardDescription>
-                Visualização em calendário - Em desenvolvimento
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-12 text-muted-foreground">
-                <Calendar className="h-16 w-16 mx-auto mb-4 opacity-50" />
-                <p className="text-lg mb-2">Visualização em Calendário</p>
-                <p>Esta funcionalidade será implementada em breve.</p>
-                <p className="mt-4">Por enquanto, use a visualização em lista.</p>
-              </div>
-            </CardContent>
-          </Card>
+          <CalendarView
+            posts={posts}
+            onPostClick={handlePostClick}
+            onCreatePost={canEdit ? handleCreatePost : undefined}
+            canEdit={canEdit}
+          />
         )}
+
+        <ModernPostForm
+          isOpen={showPostForm}
+          onClose={() => {
+            setShowPostForm(false);
+            setSelectedPost(null);
+            setDefaultDate(undefined);
+          }}
+          onSave={handleSavePost}
+          initialData={selectedPost}
+          channels={channels}
+          campaigns={campaigns}
+          defaultDate={defaultDate}
+        />
       </main>
     </div>
   );

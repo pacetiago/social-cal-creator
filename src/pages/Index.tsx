@@ -31,7 +31,7 @@ export default function Index() {
         <div className="container mx-auto flex justify-between items-center">
           <div className="flex items-center space-x-2">
             <Calendar className="h-8 w-8 text-primary" />
-            <h1 className="text-2xl font-bold">SocialMed Calendar</h1>
+            <h1 className="text-2xl font-bold">Cronograma Marsala</h1>
           </div>
           <Button onClick={() => navigate('/auth')}>
             Entrar
@@ -42,10 +42,10 @@ export default function Index() {
       <main className="container mx-auto px-6 py-12">
         <div className="text-center mb-16">
           <h1 className="text-4xl font-bold mb-6">
-            Gerencie seus conteúdos de redes sociais
+            Cronograma Marsala - Planejamento de Conteúdo
           </h1>
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Plataforma multi-tenant para agências e empresas organizarem, aprovarem e publicarem conteúdos nas redes sociais.
+            Sistema completo da Marsala para organizar, planejar e gerenciar cronogramas de conteúdo para nossos clientes.
           </p>
           <Button size="lg" onClick={() => navigate('/auth')}>
             Começar Agora
@@ -66,9 +66,9 @@ export default function Index() {
           <Card>
             <CardHeader>
               <Users className="h-12 w-12 text-primary mb-4" />
-              <CardTitle>Multi-tenant</CardTitle>
+              <CardTitle>Gestão de Clientes</CardTitle>
               <CardDescription>
-                Gerencie múltiplos clientes com permissões e roles granulares
+                Organize e gerencie cronogramas para múltiplos clientes da Marsala
               </CardDescription>
             </CardHeader>
           </Card>
