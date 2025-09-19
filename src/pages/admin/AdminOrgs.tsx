@@ -6,6 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
+import { AdminLayout } from '@/components/AdminLayout';
+
 export default function AdminOrgs() {
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -39,9 +41,9 @@ export default function AdminOrgs() {
   );
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b">
-        <div className="container mx-auto px-6 py-4">
+    <AdminLayout>
+      <div className="p-8">
+        <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold">Administração</h1>
@@ -53,9 +55,7 @@ export default function AdminOrgs() {
             </Button>
           </div>
         </div>
-      </header>
 
-      <main className="container mx-auto px-6 py-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -178,7 +178,7 @@ export default function AdminOrgs() {
             </Table>
           </CardContent>
         </Card>
-      </main>
-    </div>
+      </div>
+    </AdminLayout>
   );
 }

@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { AdminLayout } from '@/components/AdminLayout';
 
 export default function AdminAudit() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -70,9 +71,9 @@ export default function AdminAudit() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b">
-        <div className="container mx-auto px-6 py-4">
+    <AdminLayout>
+      <div className="p-8">
+        <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold">Logs de Auditoria</h1>
@@ -84,9 +85,7 @@ export default function AdminAudit() {
             </Button>
           </div>
         </div>
-      </header>
 
-      <main className="container mx-auto px-6 py-8">
         <Card>
           <CardHeader>
             <CardTitle>Histórico de Atividades</CardTitle>
@@ -191,7 +190,7 @@ export default function AdminAudit() {
             )}
           </CardContent>
         </Card>
-      </main>
-    </div>
+      </div>
+    </AdminLayout>
   );
 }

@@ -12,6 +12,7 @@ import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
 // Admin Pages
+import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminOrgs from "./pages/admin/AdminOrgs";
 import AdminAudit from "./pages/admin/AdminAudit";
 
@@ -38,6 +39,11 @@ const App = () => (
             <Route path="/" element={<Index />} />
             
             {/* Admin Routes */}
+            <Route path="/admin" element={
+              <ProtectedRoute>
+                <AdminDashboard />
+              </ProtectedRoute>
+            } />
             <Route path="/admin/orgs" element={
               <ProtectedRoute>
                 <AdminOrgs />
