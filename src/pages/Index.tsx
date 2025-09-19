@@ -74,12 +74,19 @@ const Index = () => {
   const handleClientChange = (clientId: string) => {
     setSelectedClientId(clientId);
     setSelectedCompanyId(''); // Reset company when client changes
-    setFilters(prev => ({ ...prev, clientId, companyId: '' }));
+    setFilters(prev => ({ 
+      ...prev, 
+      clientId: clientId || undefined, 
+      companyId: undefined 
+    }));
   };
 
   const handleCompanyChange = (companyId: string) => {
     setSelectedCompanyId(companyId);
-    setFilters(prev => ({ ...prev, companyId }));
+    setFilters(prev => ({ 
+      ...prev, 
+      companyId: companyId || undefined 
+    }));
   };
 
   const handleAddPost = () => {

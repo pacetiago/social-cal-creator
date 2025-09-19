@@ -38,14 +38,27 @@ export function CalendarFilters({
   currentMonth,
   onMonthChange
 }: CalendarFiltersProps) {
-  const hasActiveFilters = filters.networks.length > 0 || filters.editorialLines.length > 0 || filters.mediaTypes.length > 0;
+  const hasActiveFilters = 
+    filters.networks.length > 0 || 
+    filters.editorialLines.length > 0 || 
+    filters.mediaTypes.length > 0 ||
+    filters.clientId ||
+    filters.companyId ||
+    (currentMonth !== undefined && currentMonth !== new Date().getMonth());
 
   const clearAllFilters = () => {
     onFiltersChange({
       networks: [],
       editorialLines: [],
       mediaTypes: [],
+      clientId: undefined,
+      companyId: undefined
     });
+    onClientChange('');
+    onCompanyChange('');
+    if (onMonthChange) {
+      onMonthChange(new Date().getMonth());
+    }
   };
 
   const removeNetworkFilter = (network: SocialNetwork) => {
