@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Plus, Users } from 'lucide-react';
+import { Search, Plus, Users, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -13,11 +13,13 @@ import { OrganizationForm } from '@/components/admin/OrganizationForm';
 import { MembersModal } from '@/components/admin/MembersModal';
 
 export default function AdminOrgs() {
-  const { organizations, loading, addOrganization } = useOrganizations();
+  const { organizations, loading, addOrganization, updateOrganization } = useOrganizations();
   const [searchTerm, setSearchTerm] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [showMembers, setShowMembers] = useState(false);
   const [selectedOrg, setSelectedOrg] = useState<{ id: string; name: string } | null>(null);
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [editingOrg, setEditingOrg] = useState<any | null>(null);
 
   const filteredOrgs = organizations.filter(org =>
     org.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -35,6 +37,21 @@ export default function AdminOrgs() {
   const handleShowMembers = (org: { id: string; name: string }) => {
     setSelectedOrg(org);
     setShowMembers(true);
+  };
+
+  const handleShowEdit = (org: any) => {
+    setEditingOrg(org);
+    setShowEditForm(true);
+  };
+
+  const handleUpdateOrg = async (orgData: { name: string; slug: string }) => {
+    if (!editingOrg) return { data: null, error: 'Organização não selecionada' };
+    const result = await updateOrganization(editingOrg.id, orgData);
+    if (result.error === null) {
+      setShowEditForm(false);
+      setEditingOrg(null);
+    }
+    return result;
   };
 
   if (loading) {
@@ -143,7 +160,7 @@ export default function AdminOrgs() {
                     <TableCell className="text-muted-foreground">
                       {new Date(org.created_at).toLocaleDateString('pt-BR')}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="space-x-2">
                       <Button
                         variant="outline"
                         size="sm"
@@ -151,6 +168,14 @@ export default function AdminOrgs() {
                       >
                         <Users className="h-4 w-4 mr-1" />
                         Membros
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleShowEdit(org)}
+                      >
+                        <Pencil className="h-4 w-4 mr-1" />
+                        Editar
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -171,6 +196,19 @@ export default function AdminOrgs() {
           onClose={() => setShowForm(false)}
           onSave={handleCreateOrg}
         />
+
+        {editingOrg && (
+          <OrganizationForm
+            isOpen={showEditForm}
+            onClose={() => {
+              setShowEditForm(false);
+              setEditingOrg(null);
+            }}
+            onSave={handleUpdateOrg}
+            initialData={editingOrg}
+          />
+        )}
+        
         
         {selectedOrg && (
           <MembersModal
