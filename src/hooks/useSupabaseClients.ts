@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Client, Company } from '@/types/calendar';
+import { sampleClients } from '@/data/clientsData';
 
 export function useSupabaseClients() {
   const [clients, setClients] = useState<Client[]>([]);
@@ -42,6 +43,8 @@ export function useSupabaseClients() {
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao carregar clientes');
+      // Fallback para dados locais quando ocorrer erro (ex.: RLS bloqueando leitura pública)
+      setClients(sampleClients);
     } finally {
       setLoading(false);
     }
