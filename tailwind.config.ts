@@ -47,6 +47,23 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        brand: {
+          blue: "hsl(var(--brand-blue))",
+          green: "hsl(var(--brand-green))",
+          orange: "hsl(var(--brand-orange))",
+          purple: "hsl(var(--brand-purple))",
+        },
+        editorial: {
+          sazonal: "hsl(var(--editorial-sazonal))",
+          institucional: "hsl(var(--editorial-institucional))",
+          blog: "hsl(var(--editorial-blog))",
+        },
+        social: {
+          facebook: "hsl(var(--facebook))",
+          instagram: "hsl(var(--instagram))",
+          linkedin: "hsl(var(--linkedin))",
+          site: "hsl(var(--site))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
@@ -62,6 +79,20 @@ export default {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+      },
+      backgroundImage: {
+        'gradient-primary': 'var(--gradient-primary)',
+        'gradient-card': 'var(--gradient-card)',
+        'gradient-hero': 'var(--gradient-hero)',
+      },
+      boxShadow: {
+        'soft': 'var(--shadow-soft)',
+        'medium': 'var(--shadow-medium)',
+        'strong': 'var(--shadow-strong)',
+      },
+      transitionProperty: {
+        'smooth': 'var(--transition-smooth)',
+        'bounce': 'var(--transition-bounce)',
       },
       keyframes: {
         "accordion-down": {
