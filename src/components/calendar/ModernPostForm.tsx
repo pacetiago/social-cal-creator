@@ -49,7 +49,8 @@ export function ModernPostForm({
     publish_at: initialData?.publish_at ? new Date(initialData.publish_at) : defaultDate || null,
     theme: initialData?.theme || '',
     persona: initialData?.persona || '',
-    insights: initialData?.insights || ''
+    insights: initialData?.insights || '',
+    responsibility: (initialData as any)?.responsibility || 'agency'
   });
   const [loading, setLoading] = useState(false);
 
@@ -75,6 +76,7 @@ export function ModernPostForm({
         theme: formData.theme,
         persona: formData.persona,
         insights: formData.insights,
+        // responsibility: (formData as any).responsibility,
         utm_source: null,
         utm_campaign: null,
         utm_content: null,
@@ -103,7 +105,8 @@ export function ModernPostForm({
       publish_at: null,
       theme: '',
       persona: '',
-      insights: ''
+      insights: '',
+      responsibility: 'agency'
     });
     setSelectedClientId('');
     onClose();
@@ -180,7 +183,23 @@ export function ModernPostForm({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <Label htmlFor="responsibility">Responsabilidade</Label>
+              <Select
+                value={(formData as any).responsibility}
+                onValueChange={(value) => setFormData(prev => ({ ...prev, responsibility: value as 'client' | 'agency' }))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="agency">Agência</SelectItem>
+                  <SelectItem value="client">Cliente</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
             <div>
               <Label htmlFor="status">Status</Label>
               <Select

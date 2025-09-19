@@ -22,7 +22,7 @@ export default function AdminAudit() {
       target_id: 'post-123',
       actor_id: 'user-1',
       actor_name: 'João Silva',
-      org_name: 'Demo Agency',
+      org_name: 'Marsala Agency',
       created_at: '2024-01-15T10:30:00Z',
       diff: { title: 'Novo post criado', status: 'draft' }
     },
@@ -33,7 +33,7 @@ export default function AdminAudit() {
       target_id: 'post-123',
       actor_id: 'user-2',
       actor_name: 'Maria Santos',
-      org_name: 'Demo Agency',
+      org_name: 'Marsala Agency',
       created_at: '2024-01-15T11:45:00Z',
       diff: { status: { old: 'draft', new: 'review' } }
     },

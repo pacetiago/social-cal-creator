@@ -1,23 +1,36 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useUserOrganizations } from '@/hooks/useUserOrganizations';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar, Users, BarChart3, Settings } from 'lucide-react';
 
 export default function Index() {
   const { user } = useAuth();
+  const { userOrganizations, loading: orgsLoading } = useUserOrganizations();
   const navigate = useNavigate();
 
   useEffect(() => {
-    // If user is logged in and has platform admin role, redirect to admin
-    if (user) {
-      // For now, redirect to demo organization calendar
-      navigate('/c/demo/calendar');
+    if (user && !orgsLoading) {
+      // Check if user is platform admin
+      if (user.user_metadata?.role === 'platform_admin') {
+        navigate('/admin/orgs');
+        return;
+      }
+      
+      // Check if user has access to any organization
+      if (userOrganizations.length > 0) {
+        // Redirect to first organization calendar
+        navigate(`/c/${userOrganizations[0].slug}/calendar`);
+      } else {
+        // User has no organizations, show create org screen
+        navigate('/admin/orgs');
+      }
     }
-  }, [user, navigate]);
+  }, [user, userOrganizations, orgsLoading, navigate]);
 
-  if (user) {
+  if (user && orgsLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>

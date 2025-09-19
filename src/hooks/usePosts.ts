@@ -5,11 +5,12 @@ import { useToast } from '@/hooks/use-toast';
 
 interface UsePostsOptions {
   orgId?: string;
-  status?: PostStatus[];
+  status?: PostStatus;
   channelId?: string;
   campaignId?: string;
   clientId?: string;
   companyId?: string;
+  responsibility?: string;
 }
 
 export function usePosts(options: UsePostsOptions = {}) {
@@ -37,8 +38,8 @@ export function usePosts(options: UsePostsOptions = {}) {
         query = query.eq('org_id', options.orgId);
       }
 
-      if (options.status && options.status.length > 0) {
-        query = query.in('status', options.status);
+      if (options.status) {
+        query = query.eq('status', options.status);
       }
 
       if (options.channelId) {
@@ -55,6 +56,10 @@ export function usePosts(options: UsePostsOptions = {}) {
 
       if (options.companyId) {
         query = query.eq('company_id', options.companyId);
+      }
+
+      if (options.responsibility) {
+        query = query.eq('responsibility', options.responsibility as 'client' | 'agency');
       }
 
       const { data, error: fetchError } = await query;
@@ -177,7 +182,7 @@ export function usePosts(options: UsePostsOptions = {}) {
 
   useEffect(() => {
     fetchPosts();
-  }, [options.orgId, options.status?.join(','), options.channelId, options.campaignId, options.clientId, options.companyId]);
+  }, [options.orgId, options.status, options.channelId, options.campaignId, options.clientId, options.companyId, options.responsibility]);
 
   return {
     posts,

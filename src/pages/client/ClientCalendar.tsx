@@ -16,18 +16,20 @@ import { PostStatus, Post } from '@/types/multi-tenant';
 
 export default function ClientCalendar() {
   const { organization, loading: orgLoading, hasAccess, canEdit } = useOrganization();
-  const [selectedClientId, setSelectedClientId] = useState<string>('');
-  const [selectedCompanyId, setSelectedCompanyId] = useState<string>('');
+  const [selectedClient, setSelectedClient] = useState('');
+  const [selectedCompany, setSelectedCompany] = useState('');
+  const [selectedResponsibility, setSelectedResponsibility] = useState('');
   
-  const { posts, loading: postsLoading, addPost, updatePost } = usePosts({ 
+  const { posts, loading: postsLoading, addPost, updatePost } = usePosts({
     orgId: organization?.id,
-    clientId: selectedClientId || undefined,
-    companyId: selectedCompanyId || undefined
+    clientId: selectedClient || undefined,
+    companyId: selectedCompany || undefined,
+    responsibility: selectedResponsibility || undefined
   });
   const { channels } = useChannels(organization?.id);
   const { campaigns } = useCampaigns(organization?.id);
   const { clients } = useClients(organization?.id);
-  const { companies } = useCompanies(selectedClientId || undefined);
+  const { companies } = useCompanies(selectedClient || undefined);
   
   const [view, setView] = useState<'calendar' | 'list'>('calendar');
   const [showPostForm, setShowPostForm] = useState(false);
@@ -258,11 +260,14 @@ export default function ClientCalendar() {
           {showFilters && (
             <div className="lg:col-span-1">
               <ClientFilters
-                orgId={organization?.id}
-                onClientChange={setSelectedClientId}
-                onCompanyChange={setSelectedCompanyId}
-                selectedClientId={selectedClientId}
-                selectedCompanyId={selectedCompanyId}
+                selectedClient={selectedClient}
+                selectedCompany={selectedCompany}
+                selectedResponsibility={selectedResponsibility}
+                onClientChange={setSelectedClient}
+                onCompanyChange={setSelectedCompany}
+                onResponsibilityChange={setSelectedResponsibility}
+                clients={clients}
+                companies={companies}
               />
             </div>
           )}

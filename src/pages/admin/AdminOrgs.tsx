@@ -1,39 +1,58 @@
 import { useState } from 'react';
-import { useOrganizations } from '@/hooks/useOrganizations';
-import { OrganizationForm } from '@/components/admin/OrganizationForm';
-import { Plus, Search, Settings, Users } from 'lucide-react';
+import { Search, Plus, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 import { AdminLayout } from '@/components/AdminLayout';
+import { useOrganizations } from '@/hooks/useOrganizations';
+import { OrganizationForm } from '@/components/admin/OrganizationForm';
+import { MembersModal } from '@/components/admin/MembersModal';
 
 export default function AdminOrgs() {
   const { organizations, loading, addOrganization } = useOrganizations();
   const [searchTerm, setSearchTerm] = useState('');
   const [showForm, setShowForm] = useState(false);
+  const [showMembers, setShowMembers] = useState(false);
+  const [selectedOrg, setSelectedOrg] = useState<{ id: string; name: string } | null>(null);
 
   const filteredOrgs = organizations.filter(org =>
     org.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     org.slug.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleCreateOrg = async (data: { name: string; slug: string }) => {
-    const result = await addOrganization(data);
+  const handleCreateOrg = async (orgData: { name: string; slug: string }) => {
+    const result = await addOrganization(orgData);
+    if (result.error === null) {
+      setShowForm(false);
+    }
     return result;
+  };
+
+  const handleShowMembers = (org: { id: string; name: string }) => {
+    setSelectedOrg(org);
+    setShowMembers(true);
   };
 
   if (loading) {
     return (
       <AdminLayout>
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="p-8">
+          <div className="space-y-4">
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-64 w-full" />
+          </div>
         </div>
       </AdminLayout>
     );
   }
+
+  const totalOrgs = organizations.length;
+  const activeOrgs = organizations.filter(org => org.status === 'active').length;
 
   return (
     <AdminLayout>
@@ -41,8 +60,8 @@ export default function AdminOrgs() {
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold">Administração</h1>
-              <p className="text-muted-foreground">Gerencie organizações e clientes da Marsala</p>
+              <h1 className="text-2xl font-bold">Organizações</h1>
+              <p className="text-muted-foreground">Gerencie todas as organizações da plataforma</p>
             </div>
             <Button onClick={() => setShowForm(true)}>
               <Plus className="h-4 w-4 mr-2" />
@@ -51,76 +70,51 @@ export default function AdminOrgs() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        {/* Summary Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total de Organizações</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{organizations.length}</div>
-              <p className="text-xs text-muted-foreground">+1 desde o último mês</p>
+              <div className="text-2xl font-bold">{totalOrgs}</div>
+              <p className="text-xs text-muted-foreground">
+                Todas as organizações registradas
+              </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Organizações Ativas</CardTitle>
-              <Badge variant="outline" className="text-green-600">
-                Ativo
-              </Badge>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
-                {organizations.filter(org => org.status === 'active').length}
-              </div>
-              <p className="text-xs text-muted-foreground">100% das organizações</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total de Posts</CardTitle>
-              <Settings className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                -
-              </div>
-              <p className="text-xs text-muted-foreground">Todos os posts da plataforma</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total de Usuários</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                -
-              </div>
-              <p className="text-xs text-muted-foreground">Todos os membros ativos</p>
+              <div className="text-2xl font-bold">{activeOrgs}</div>
+              <p className="text-xs text-muted-foreground">
+                Organizações com status ativo
+              </p>
             </CardContent>
           </Card>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>Organizações</CardTitle>
+            <CardTitle>Lista de Organizações</CardTitle>
             <CardDescription>
-              Gerencie todas as organizações da plataforma
+              Visualize e gerencie todas as organizações da plataforma
             </CardDescription>
+            
             <div className="flex items-center space-x-2">
               <Search className="h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Buscar organizações..."
+                placeholder="Buscar por nome ou slug..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="max-w-sm"
               />
             </div>
           </CardHeader>
+          
           <CardContent>
             <Table>
               <TableHeader>
@@ -128,9 +122,6 @@ export default function AdminOrgs() {
                   <TableHead>Nome</TableHead>
                   <TableHead>Slug</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Membros</TableHead>
-                  <TableHead>Posts</TableHead>
-                  <TableHead>Campanhas</TableHead>
                   <TableHead>Criado em</TableHead>
                   <TableHead>Ações</TableHead>
                 </TableRow>
@@ -141,36 +132,37 @@ export default function AdminOrgs() {
                     <TableCell className="font-medium">{org.name}</TableCell>
                     <TableCell>
                       <code className="rounded bg-muted px-2 py-1 text-sm">
-                        /c/{org.slug}
+                        {org.slug}
                       </code>
                     </TableCell>
                     <TableCell>
-                      <Badge 
-                        variant={org.status === 'active' ? 'default' : 'secondary'}
-                      >
-                        {org.status}
+                      <Badge variant={org.status === 'active' ? 'default' : 'secondary'}>
+                        {org.status === 'active' ? 'Ativa' : 'Inativa'}
                       </Badge>
                     </TableCell>
-                    <TableCell>-</TableCell>
-                    <TableCell>-</TableCell>
-                    <TableCell>-</TableCell>
-                    <TableCell>
+                    <TableCell className="text-muted-foreground">
                       {new Date(org.created_at).toLocaleDateString('pt-BR')}
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center space-x-2">
-                        <Button variant="outline" size="sm">
-                          <Settings className="h-4 w-4" />
-                        </Button>
-                        <Button variant="outline" size="sm">
-                          <Users className="h-4 w-4" />
-                        </Button>
-                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleShowMembers({ id: org.id, name: org.name })}
+                      >
+                        <Users className="h-4 w-4 mr-1" />
+                        Membros
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
+            
+            {filteredOrgs.length === 0 && (
+              <div className="text-center py-8 text-muted-foreground">
+                <p>Nenhuma organização encontrada.</p>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -179,6 +171,18 @@ export default function AdminOrgs() {
           onClose={() => setShowForm(false)}
           onSave={handleCreateOrg}
         />
+        
+        {selectedOrg && (
+          <MembersModal
+            isOpen={showMembers}
+            onClose={() => {
+              setShowMembers(false);
+              setSelectedOrg(null);
+            }}
+            orgId={selectedOrg.id}
+            orgName={selectedOrg.name}
+          />
+        )}
       </div>
     </AdminLayout>
   );

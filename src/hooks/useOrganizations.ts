@@ -33,32 +33,39 @@ export function useOrganizations() {
 
   const addOrganization = async (orgData: { name: string; slug: string }) => {
     try {
-      const { data, error: insertError } = await supabase
-        .from('orgs')
-        .insert([{
-          name: orgData.name,
-          slug: orgData.slug,
-          status: 'active',
-          created_by: (await supabase.auth.getUser()).data.user?.id
-        }])
-        .select()
-        .single();
+      const { data: orgId, error: rpcError } = await supabase
+        .rpc('create_org_with_owner', {
+          org_name: orgData.name,
+          org_slug: orgData.slug
+        });
 
-      if (insertError) throw insertError;
+      if (rpcError) throw rpcError;
 
-      setOrganizations(prev => [...prev, data]);
+      // Refetch organizations to get the new one
+      await fetchOrganizations();
       
       toast({
         title: 'Organização criada',
         description: 'A organização foi criada com sucesso.',
       });
 
-      return { data, error: null };
+      return { data: { id: orgId }, error: null };
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to create organization';
+      let userMessage = message;
+      
+      // Provide better error messages for common cases
+      if (message.includes('duplicate key value violates unique constraint')) {
+        if (message.includes('slug')) {
+          userMessage = 'Este slug já está em uso. Escolha outro.';
+        } else if (message.includes('name')) {
+          userMessage = 'Este nome já está em uso. Escolha outro.';
+        }
+      }
+      
       toast({
         title: 'Erro ao criar organização',
-        description: message,
+        description: userMessage,
         variant: 'destructive',
       });
       return { data: null, error: message };

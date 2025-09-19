@@ -36,12 +36,6 @@ const navigation = [
     icon: Users,
     description: 'Gerenciar usuários da plataforma'
   },
-  {
-    name: 'Configurações',
-    href: '/admin/settings',
-    icon: Settings,
-    description: 'Configurações globais'
-  }
 ];
 
 export function AdminLayout({ children }: AdminLayoutProps) {
