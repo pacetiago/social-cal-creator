@@ -8,11 +8,28 @@ import { PostModal } from "@/components/calendar/PostModal";
 import { PostForm } from "@/components/calendar/PostForm";
 import { CalendarPDFExport } from "@/components/calendar/CalendarPDFExport";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
-import { samplePosts } from "@/data/sampleData";
-import { sampleClients, getClientById, getCompanyById, getAllCompanies } from "@/data/clientsData";
+import { useSupabaseClients } from "@/hooks/useSupabaseClients";
+import { useSupabaseCalendarPosts } from "@/hooks/useSupabaseCalendarPosts";
 
 const Index = () => {
-  const [posts, setPosts] = useLocalStorage<CalendarPost[]>('calendar-posts', samplePosts);
+  // Supabase hooks
+  const { 
+    clients, 
+    loading: clientsLoading, 
+    getAllCompanies, 
+    getClientById, 
+    getCompanyById 
+  } = useSupabaseClients();
+  
+  const { 
+    posts, 
+    loading: postsLoading, 
+    addPost, 
+    updatePost, 
+    deletePost 
+  } = useSupabaseCalendarPosts();
+
+  // State management
   const [currentView, setCurrentView] = useState<'calendar' | 'analytics'>('calendar');
   const [selectedPost, setSelectedPost] = useState<CalendarPost | null>(null);
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
@@ -74,23 +91,36 @@ const Index = () => {
     setIsPostModalOpen(true);
   };
 
-  const handleSavePost = (postData: Omit<CalendarPost, 'id' | 'createdAt' | 'updatedAt'>) => {
-    const newPost: CalendarPost = {
-      ...postData,
-      id: Date.now().toString(),
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    
-    setPosts(prevPosts => [...prevPosts, newPost]);
-    setIsFormOpen(false);
+  const handleSavePost = async (postData: Omit<CalendarPost, 'id' | 'createdAt' | 'updatedAt'>) => {
+    try {
+      await addPost(postData);
+      setIsFormOpen(false);
+    } catch (error) {
+      console.error('Error saving post:', error);
+    }
   };
 
-  const handleDeletePost = (postId: string) => {
-    setPosts(prevPosts => prevPosts.filter(post => post.id !== postId));
-    setIsPostModalOpen(false);
-    setSelectedPost(null);
+  const handleDeletePost = async (postId: string) => {
+    try {
+      await deletePost(postId);
+      setIsPostModalOpen(false);
+      setSelectedPost(null);
+    } catch (error) {
+      console.error('Error deleting post:', error);
+    }
   };
+
+  // Show loading state
+  if (clientsLoading || postsLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Carregando dados...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -108,7 +138,7 @@ const Index = () => {
         <CalendarFilters 
           filters={filters}
           onFiltersChange={setFilters}
-          clients={sampleClients}
+          clients={clients}
           selectedClient={selectedClient}
           selectedCompany={selectedCompany}
           onClientChange={handleClientChange}
@@ -158,7 +188,7 @@ const Index = () => {
           isOpen={isFormOpen}
           onClose={() => setIsFormOpen(false)}
           onSave={handleSavePost}
-          clients={sampleClients}
+          clients={clients}
           defaultClientId={selectedClientId}
           defaultCompanyId={selectedCompanyId}
         />
