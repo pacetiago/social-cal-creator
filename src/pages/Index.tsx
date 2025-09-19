@@ -1,241 +1,99 @@
-import { useState } from "react";
-import { CalendarPost, CalendarFilters as FiltersType } from "@/types/calendar";
-import { CalendarHeader } from "@/components/calendar/CalendarHeader";
-import { CalendarGrid } from "@/components/calendar/CalendarGrid";
-import { CalendarFilters } from "@/components/calendar/CalendarFilters";
-import { CalendarAnalytics } from "@/components/calendar/CalendarAnalytics";
-import { PostModal } from "@/components/calendar/PostModal";
-import { PostForm } from "@/components/calendar/PostForm";
-import { CalendarPDFExport } from "@/components/calendar/CalendarPDFExport";
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Calendar, Users, BarChart3, Settings } from 'lucide-react';
 
-import { AuthRequiredMessage } from "@/components/AuthRequiredMessage";
-import { UserMenu } from "@/components/UserMenu";
-import { useAuth } from "@/hooks/useAuth";
-import { Button } from "@/components/ui/button";
-import { LogIn } from "lucide-react";
-import { useLocalStorage } from "@/hooks/useLocalStorage";
-import { useSupabaseClients } from "@/hooks/useSupabaseClients";
-import { useSupabaseCalendarPosts } from "@/hooks/useSupabaseCalendarPosts";
-
-const Index = () => {
+export default function Index() {
   const { user } = useAuth();
-  // Supabase hooks
-  const { 
-    clients, 
-    loading: clientsLoading, 
-    getAllCompanies, 
-    getClientById, 
-    getCompanyById 
-  } = useSupabaseClients();
-  
-  const { 
-    posts, 
-    loading: postsLoading, 
-    addPost, 
-    updatePost, 
-    deletePost 
-  } = useSupabaseCalendarPosts();
+  const navigate = useNavigate();
 
-  // State management
-  const [currentView, setCurrentView] = useState<'calendar' | 'analytics'>('calendar');
-  const [selectedPost, setSelectedPost] = useState<CalendarPost | null>(null);
-  const [isPostModalOpen, setIsPostModalOpen] = useState(false);
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [currentMonth, setCurrentMonth] = useState(9); // October (0-indexed)
-  const [currentYear, setCurrentYear] = useState(2025);
-  const [selectedClientId, setSelectedClientId] = useLocalStorage<string>('selected-client', 'austa');
-  const [selectedCompanyId, setSelectedCompanyId] = useLocalStorage<string>('selected-company', 'austa-hospital');
-  const [filters, setFilters] = useState<FiltersType>({
-    clientId: selectedClientId,
-    companyId: selectedCompanyId,
-    networks: [],
-    editorialLines: [],
-    mediaTypes: [],
-  });
-
-  const selectedClient = getClientById(selectedClientId);
-  const selectedCompany = getCompanyById(selectedClientId, selectedCompanyId);
-  const allCompanies = getAllCompanies();
-
-  const filteredPosts = posts.filter(post => {
-    // Filter by selected client and company
-    const clientMatch = !filters.clientId || post.clientId === filters.clientId;
-    const companyMatch = !filters.companyId || post.companyId === filters.companyId;
-    
-    // Filter by month/year
-    const dateMatch = post.month === currentMonth && post.year === currentYear;
-    
-    // Filter by additional criteria
-    const networkMatch = filters.networks.length === 0 || 
-      filters.networks.some(network => post.networks.includes(network));
-    
-    const editorialMatch = filters.editorialLines.length === 0 || 
-      filters.editorialLines.includes(post.editorialLine);
-    
-    const mediaMatch = filters.mediaTypes.length === 0 || 
-      filters.mediaTypes.includes(post.mediaType);
-    
-    return clientMatch && companyMatch && dateMatch && networkMatch && editorialMatch && mediaMatch;
-  });
-
-  const handleClientChange = (clientId: string) => {
-    setSelectedClientId(clientId);
-    setSelectedCompanyId(''); // Reset company when client changes
-    setFilters(prev => ({ 
-      ...prev, 
-      clientId: clientId || undefined, 
-      companyId: undefined 
-    }));
-  };
-
-  const handleCompanyChange = (companyId: string) => {
-    setSelectedCompanyId(companyId);
-    setFilters(prev => ({ 
-      ...prev, 
-      companyId: companyId || undefined 
-    }));
-  };
-
-  const handleAddPost = () => {
-    if (!user) {
-      return; // Don't open form if user is not authenticated
+  useEffect(() => {
+    // If user is logged in and has platform admin role, redirect to admin
+    if (user) {
+      // For now, redirect to demo organization calendar
+      navigate('/c/demo/calendar');
     }
-    setIsFormOpen(true);
-  };
+  }, [user, navigate]);
 
-  const handlePostClick = (post: CalendarPost) => {
-    setSelectedPost(post);
-    setIsPostModalOpen(true);
-  };
-
-  const handleSavePost = async (postData: Omit<CalendarPost, 'id' | 'createdAt' | 'updatedAt'>) => {
-    try {
-      await addPost(postData);
-      setIsFormOpen(false);
-    } catch (error) {
-      console.error('Error saving post:', error);
-    }
-  };
-
-  const handleDeletePost = async (postId: string) => {
-    if (!user) {
-      return; // Don't allow deletion if user is not authenticated
-    }
-    try {
-      await deletePost(postId);
-      setIsPostModalOpen(false);
-      setSelectedPost(null);
-    } catch (error) {
-      console.error('Error deleting post:', error);
-    }
-  };
-
-  // Show loading state
-  if (clientsLoading || postsLoading) {
+  if (user) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Carregando dados...</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-6 max-w-7xl">
-        <div className="flex justify-between items-center mb-6">
-          <div></div>
-          {user ? (
-            <UserMenu />
-          ) : (
-            <Button asChild>
-              <a href="/auth">
-                <LogIn className="h-4 w-4 mr-2" />
-                Login
-              </a>
-            </Button>
-          )}
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted">
+      <header className="p-6">
+        <div className="container mx-auto flex justify-between items-center">
+          <div className="flex items-center space-x-2">
+            <Calendar className="h-8 w-8 text-primary" />
+            <h1 className="text-2xl font-bold">SocialMed Calendar</h1>
+          </div>
+          <Button onClick={() => navigate('/auth')}>
+            Entrar
+          </Button>
         </div>
-        <CalendarHeader 
-          onAddPost={handleAddPost}
-          currentView={currentView}
-          onViewChange={setCurrentView}
-          selectedClient={selectedClient}
-          selectedCompany={selectedCompany}
-          currentMonth={currentMonth}
-          currentYear={currentYear}
-        />
+      </header>
 
-        <CalendarFilters 
-          filters={filters}
-          onFiltersChange={setFilters}
-          clients={clients}
-          selectedClient={selectedClient}
-          selectedCompany={selectedCompany}
-          onClientChange={handleClientChange}
-          onCompanyChange={handleCompanyChange}
-          currentMonth={currentMonth}
-          onMonthChange={setCurrentMonth}
-        />
-
-        <div className="mt-6">
-          {!user ? (
-            <AuthRequiredMessage />
-          ) : (
-            <>
-              {currentView === 'calendar' ? (
-                <>
-                  <div className="flex justify-end mb-4">
-                    <CalendarPDFExport
-                      posts={filteredPosts}
-                      companies={allCompanies}
-                      currentMonth={currentMonth}
-                      currentYear={currentYear}
-                      selectedClient={selectedClientId}
-                      selectedCompany={selectedCompanyId}
-                    />
-                  </div>
-                  <CalendarGrid
-                    posts={filteredPosts}
-                    onPostClick={handlePostClick}
-                    month={currentMonth}
-                    year={currentYear}
-                    companies={allCompanies}
-                  />
-                </>
-              ) : (
-                <CalendarAnalytics posts={filteredPosts} />
-              )}
-            </>
-          )}
+      <main className="container mx-auto px-6 py-12">
+        <div className="text-center mb-16">
+          <h1 className="text-4xl font-bold mb-6">
+            Gerencie seus conteúdos de redes sociais
+          </h1>
+          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+            Plataforma multi-tenant para agências e empresas organizarem, aprovarem e publicarem conteúdos nas redes sociais.
+          </p>
+          <Button size="lg" onClick={() => navigate('/auth')}>
+            Começar Agora
+          </Button>
         </div>
 
-        <PostModal
-          post={selectedPost}
-          isOpen={isPostModalOpen}
-          onClose={() => {
-            setIsPostModalOpen(false);
-            setSelectedPost(null);
-          }}
-          companies={allCompanies}
-          onDelete={user ? handleDeletePost : undefined}
-        />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+          <Card>
+            <CardHeader>
+              <Calendar className="h-12 w-12 text-primary mb-4" />
+              <CardTitle>Calendário Editorial</CardTitle>
+              <CardDescription>
+                Visualize e organize todos os posts em um calendário intuitivo
+              </CardDescription>
+            </CardHeader>
+          </Card>
 
-        {user && (
-          <PostForm
-            isOpen={isFormOpen}
-            onClose={() => setIsFormOpen(false)}
-            onSave={handleSavePost}
-            clients={clients}
-            defaultClientId={selectedClientId}
-            defaultCompanyId={selectedCompanyId}
-          />
-        )}
-      </div>
+          <Card>
+            <CardHeader>
+              <Users className="h-12 w-12 text-primary mb-4" />
+              <CardTitle>Multi-tenant</CardTitle>
+              <CardDescription>
+                Gerencie múltiplos clientes com permissões e roles granulares
+              </CardDescription>
+            </CardHeader>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <BarChart3 className="h-12 w-12 text-primary mb-4" />
+              <CardTitle>Kanban Board</CardTitle>
+              <CardDescription>
+                Acompanhe o status dos posts: ideia, rascunho, aprovado, publicado
+              </CardDescription>
+            </CardHeader>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <Settings className="h-12 w-12 text-primary mb-4" />
+              <CardTitle>Aprovações</CardTitle>
+              <CardDescription>
+                Sistema de aprovação com comentários e histórico de mudanças
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        </div>
+      </main>
     </div>
   );
-};
-
-export default Index;
+}
