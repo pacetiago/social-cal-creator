@@ -8,6 +8,7 @@ import { PostModal } from "@/components/calendar/PostModal";
 import { PostForm } from "@/components/calendar/PostForm";
 import { CalendarPDFExport } from "@/components/calendar/CalendarPDFExport";
 
+import { AuthRequiredMessage } from "@/components/AuthRequiredMessage";
 import { UserMenu } from "@/components/UserMenu";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -170,9 +171,9 @@ const Index = () => {
         <CalendarFilters 
           filters={filters}
           onFiltersChange={setFilters}
-          clients={clients}
-          selectedClient={selectedClient}
-          selectedCompany={selectedCompany}
+          clients={user ? clients : []}
+          selectedClient={user ? selectedClient : undefined}
+          selectedCompany={user ? selectedCompany : undefined}
           onClientChange={handleClientChange}
           onCompanyChange={handleCompanyChange}
           currentMonth={currentMonth}
@@ -180,30 +181,34 @@ const Index = () => {
         />
 
         <div className="mt-6">
-          {currentView === 'calendar' ? (
-            <>
-              {user && (
-                <div className="flex justify-end mb-4">
-                  <CalendarPDFExport
-                    posts={filteredPosts}
-                    companies={allCompanies}
-                    currentMonth={currentMonth}
-                    currentYear={currentYear}
-                    selectedClient={selectedClientId}
-                    selectedCompany={selectedCompanyId}
-                  />
-                </div>
-              )}
-              <CalendarGrid
-                posts={filteredPosts}
-                onPostClick={handlePostClick}
-                month={currentMonth}
-                year={currentYear}
-                companies={allCompanies}
-              />
-            </>
+          {!user ? (
+            <AuthRequiredMessage />
           ) : (
-            <CalendarAnalytics posts={filteredPosts} />
+            <>
+              {currentView === 'calendar' ? (
+                <>
+                  <div className="flex justify-end mb-4">
+                    <CalendarPDFExport
+                      posts={filteredPosts}
+                      companies={allCompanies}
+                      currentMonth={currentMonth}
+                      currentYear={currentYear}
+                      selectedClient={selectedClientId}
+                      selectedCompany={selectedCompanyId}
+                    />
+                  </div>
+                  <CalendarGrid
+                    posts={filteredPosts}
+                    onPostClick={handlePostClick}
+                    month={currentMonth}
+                    year={currentYear}
+                    companies={allCompanies}
+                  />
+                </>
+              ) : (
+                <CalendarAnalytics posts={filteredPosts} />
+              )}
+            </>
           )}
         </div>
 

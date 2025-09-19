@@ -135,8 +135,8 @@ export function CalendarFilters({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-4 mb-4">
-      {/* Client and Company Filters */}
-      {clients.length > 0 && (
+      {/* Client and Company Filters - Only for authenticated users */}
+      {user && clients.length > 0 && (
         <>
           {/* Client Filter */}
           <div>
@@ -160,7 +160,7 @@ export function CalendarFilters({
         </>
       )}
 
-      {selectedClient && (
+      {user && selectedClient && (
         <div>
           <label className="text-sm font-medium text-foreground mb-2 block flex items-center gap-2">
             <Building2 className="h-4 w-4" />
