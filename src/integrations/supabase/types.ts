@@ -672,7 +672,16 @@ export type Database = {
     }
     Enums: {
       asset_kind: "image" | "video" | "doc"
-      channel_key: "instagram" | "linkedin" | "x" | "tiktok" | "youtube"
+      channel_key:
+        | "instagram"
+        | "linkedin"
+        | "x"
+        | "tiktok"
+        | "youtube"
+        | "blog"
+        | "ebook"
+        | "facebook"
+        | "roteiro"
       channel_type: "Feed" | "Story" | "Feed e Story" | "Site"
       editorial_line: "SAZONAL" | "INSTITUCIONAL" | "BLOG" | "ROTEIRO"
       filter_type: "theme" | "persona" | "tag"
@@ -816,7 +825,17 @@ export const Constants = {
   public: {
     Enums: {
       asset_kind: ["image", "video", "doc"],
-      channel_key: ["instagram", "linkedin", "x", "tiktok", "youtube"],
+      channel_key: [
+        "instagram",
+        "linkedin",
+        "x",
+        "tiktok",
+        "youtube",
+        "blog",
+        "ebook",
+        "facebook",
+        "roteiro",
+      ],
       channel_type: ["Feed", "Story", "Feed e Story", "Site"],
       editorial_line: ["SAZONAL", "INSTITUCIONAL", "BLOG", "ROTEIRO"],
       filter_type: ["theme", "persona", "tag"],
