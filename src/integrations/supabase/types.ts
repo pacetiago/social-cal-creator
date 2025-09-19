@@ -14,133 +14,487 @@ export type Database = {
   }
   public: {
     Tables: {
-      calendar_posts: {
+      approvals: {
         Row: {
-          channels: Database["public"]["Enums"]["channel_type"][]
-          client_id: string | null
-          company_id: string | null
-          content: string
+          approved_at: string | null
+          approved_by: string
+          comments: string | null
           created_at: string | null
-          day: number
-          editorial_line: Database["public"]["Enums"]["editorial_line"]
           id: string
-          insight: string | null
-          media_type: Database["public"]["Enums"]["media_type"]
-          month: number
-          networks: Database["public"]["Enums"]["social_network"][]
-          responsibility: Database["public"]["Enums"]["responsibility_type"]
-          subject: string
+          org_id: string
+          post_id: string
+          status: string
           updated_at: string | null
-          year: number
         }
         Insert: {
-          channels?: Database["public"]["Enums"]["channel_type"][]
-          client_id?: string | null
-          company_id?: string | null
-          content: string
+          approved_at?: string | null
+          approved_by: string
+          comments?: string | null
           created_at?: string | null
-          day: number
-          editorial_line: Database["public"]["Enums"]["editorial_line"]
           id?: string
-          insight?: string | null
-          media_type: Database["public"]["Enums"]["media_type"]
-          month: number
-          networks?: Database["public"]["Enums"]["social_network"][]
-          responsibility: Database["public"]["Enums"]["responsibility_type"]
-          subject: string
+          org_id: string
+          post_id: string
+          status: string
           updated_at?: string | null
-          year: number
         }
         Update: {
-          channels?: Database["public"]["Enums"]["channel_type"][]
-          client_id?: string | null
-          company_id?: string | null
-          content?: string
+          approved_at?: string | null
+          approved_by?: string
+          comments?: string | null
           created_at?: string | null
-          day?: number
-          editorial_line?: Database["public"]["Enums"]["editorial_line"]
           id?: string
-          insight?: string | null
-          media_type?: Database["public"]["Enums"]["media_type"]
-          month?: number
-          networks?: Database["public"]["Enums"]["social_network"][]
-          responsibility?: Database["public"]["Enums"]["responsibility_type"]
-          subject?: string
+          org_id?: string
+          post_id?: string
+          status?: string
           updated_at?: string | null
-          year?: number
         }
         Relationships: [
           {
-            foreignKeyName: "calendar_posts_client_id_fkey"
-            columns: ["client_id"]
+            foreignKeyName: "approvals_org_id_fkey"
+            columns: ["org_id"]
             isOneToOne: false
-            referencedRelation: "clients"
+            referencedRelation: "orgs"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "calendar_posts_company_id_fkey"
-            columns: ["company_id"]
+            foreignKeyName: "approvals_post_id_fkey"
+            columns: ["post_id"]
             isOneToOne: false
-            referencedRelation: "companies"
+            referencedRelation: "posts"
             referencedColumns: ["id"]
           },
         ]
       }
-      clients: {
+      assets: {
         Row: {
           created_at: string | null
+          created_by: string | null
+          file_path: string | null
+          file_size: number | null
+          file_url: string | null
           id: string
+          kind: Database["public"]["Enums"]["asset_kind"]
+          metadata: Json | null
+          mime_type: string | null
           name: string
+          org_id: string
+          post_id: string | null
+          tags: string[] | null
           updated_at: string | null
+          updated_by: string | null
         }
         Insert: {
           created_at?: string | null
-          id: string
+          created_by?: string | null
+          file_path?: string | null
+          file_size?: number | null
+          file_url?: string | null
+          id?: string
+          kind: Database["public"]["Enums"]["asset_kind"]
+          metadata?: Json | null
+          mime_type?: string | null
           name: string
+          org_id: string
+          post_id?: string | null
+          tags?: string[] | null
           updated_at?: string | null
+          updated_by?: string | null
         }
         Update: {
           created_at?: string | null
+          created_by?: string | null
+          file_path?: string | null
+          file_size?: number | null
+          file_url?: string | null
           id?: string
+          kind?: Database["public"]["Enums"]["asset_kind"]
+          metadata?: Json | null
+          mime_type?: string | null
           name?: string
+          org_id?: string
+          post_id?: string | null
+          tags?: string[] | null
           updated_at?: string | null
-        }
-        Relationships: []
-      }
-      companies: {
-        Row: {
-          client_id: string | null
-          color: string
-          created_at: string | null
-          group_name: string | null
-          id: string
-          name: string
-          updated_at: string | null
-        }
-        Insert: {
-          client_id?: string | null
-          color: string
-          created_at?: string | null
-          group_name?: string | null
-          id: string
-          name: string
-          updated_at?: string | null
-        }
-        Update: {
-          client_id?: string | null
-          color?: string
-          created_at?: string | null
-          group_name?: string | null
-          id?: string
-          name?: string
-          updated_at?: string | null
+          updated_by?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "companies_client_id_fkey"
-            columns: ["client_id"]
+            foreignKeyName: "assets_org_id_fkey"
+            columns: ["org_id"]
             isOneToOne: false
-            referencedRelation: "clients"
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assets_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      audit_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string | null
+          diff: Json | null
+          id: string
+          metadata: Json | null
+          org_id: string | null
+          target_id: string | null
+          target_table: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string | null
+          diff?: Json | null
+          id?: string
+          metadata?: Json | null
+          org_id?: string | null
+          target_id?: string | null
+          target_table: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string | null
+          diff?: Json | null
+          id?: string
+          metadata?: Json | null
+          org_id?: string | null
+          target_id?: string | null
+          target_table?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_log_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaigns: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          end_date: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          org_id: string
+          start_date: string | null
+          updated_at: string | null
+          updated_by: string | null
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_source: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          org_id: string
+          start_date?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_source?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          org_id?: string
+          start_date?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_source?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaigns_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      channels: {
+        Row: {
+          config: Json | null
+          created_at: string | null
+          created_by: string | null
+          id: string
+          is_active: boolean | null
+          key: Database["public"]["Enums"]["channel_key"]
+          name: string
+          org_id: string
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          config?: Json | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          key: Database["public"]["Enums"]["channel_key"]
+          name: string
+          org_id: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          config?: Json | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          key?: Database["public"]["Enums"]["channel_key"]
+          name?: string
+          org_id?: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "channels_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      filters: {
+        Row: {
+          color: string | null
+          created_at: string | null
+          created_by: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          org_id: string
+          type: Database["public"]["Enums"]["filter_type"]
+          updated_at: string | null
+          updated_by: string | null
+          value: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          org_id: string
+          type: Database["public"]["Enums"]["filter_type"]
+          updated_at?: string | null
+          updated_by?: string | null
+          value: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          org_id?: string
+          type?: Database["public"]["Enums"]["filter_type"]
+          updated_at?: string | null
+          updated_by?: string | null
+          value?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "filters_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      memberships: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: string
+          org_id: string
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at: string | null
+          updated_by: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          org_id: string
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string | null
+          updated_by?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          org_id?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string | null
+          updated_by?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "memberships_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orgs: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: string
+          name: string
+          slug: string
+          status: string | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          name: string
+          slug: string
+          status?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          name?: string
+          slug?: string
+          status?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      posts: {
+        Row: {
+          campaign_id: string | null
+          channel_id: string | null
+          content: string | null
+          created_at: string | null
+          created_by: string | null
+          id: string
+          insights: string | null
+          org_id: string
+          persona: string | null
+          publish_at: string | null
+          status: Database["public"]["Enums"]["post_status"] | null
+          tags: string[] | null
+          theme: string | null
+          title: string
+          updated_at: string | null
+          updated_by: string | null
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_source: string | null
+          variations: Json | null
+        }
+        Insert: {
+          campaign_id?: string | null
+          channel_id?: string | null
+          content?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          insights?: string | null
+          org_id: string
+          persona?: string | null
+          publish_at?: string | null
+          status?: Database["public"]["Enums"]["post_status"] | null
+          tags?: string[] | null
+          theme?: string | null
+          title: string
+          updated_at?: string | null
+          updated_by?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_source?: string | null
+          variations?: Json | null
+        }
+        Update: {
+          campaign_id?: string | null
+          channel_id?: string | null
+          content?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          insights?: string | null
+          org_id?: string
+          persona?: string | null
+          publish_at?: string | null
+          status?: Database["public"]["Enums"]["post_status"] | null
+          tags?: string[] | null
+          theme?: string | null
+          title?: string
+          updated_at?: string | null
+          updated_by?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_source?: string | null
+          variations?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "posts_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "posts_channel_id_fkey"
+            columns: ["channel_id"]
+            isOneToOne: false
+            referencedRelation: "channels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "posts_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
             referencedColumns: ["id"]
           },
         ]
@@ -172,42 +526,6 @@ export type Database = {
         }
         Relationships: []
       }
-      user_clients: {
-        Row: {
-          client_id: string
-          created_at: string
-          id: string
-          user_id: string
-        }
-        Insert: {
-          client_id: string
-          created_at?: string
-          id?: string
-          user_id: string
-        }
-        Update: {
-          client_id?: string
-          created_at?: string
-          id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_clients_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "clients"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_clients_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
     }
     Views: {
       [_ in never]: never
@@ -221,13 +539,36 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      is_platform_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      user_has_org_access: {
+        Args: { target_org_id: string }
+        Returns: boolean
+      }
+      user_org_role: {
+        Args: { target_org_id: string }
+        Returns: Database["public"]["Enums"]["user_role"]
+      }
     }
     Enums: {
+      asset_kind: "image" | "video" | "doc"
+      channel_key: "instagram" | "linkedin" | "x" | "tiktok" | "youtube"
       channel_type: "Feed" | "Story" | "Feed e Story" | "Site"
       editorial_line: "SAZONAL" | "INSTITUCIONAL" | "BLOG" | "ROTEIRO"
+      filter_type: "theme" | "persona" | "tag"
       media_type: "Imagem" | "Vídeo" | "Carrossel" | "Texto blog"
+      post_status:
+        | "idea"
+        | "draft"
+        | "review"
+        | "approved"
+        | "scheduled"
+        | "published"
       responsibility_type: "Agência" | "Cliente"
       social_network: "Facebook" | "Instagram" | "LinkedIn" | "Site"
+      user_role: "OWNER" | "ADMIN" | "EDITOR" | "VIEWER"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -355,11 +696,23 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      asset_kind: ["image", "video", "doc"],
+      channel_key: ["instagram", "linkedin", "x", "tiktok", "youtube"],
       channel_type: ["Feed", "Story", "Feed e Story", "Site"],
       editorial_line: ["SAZONAL", "INSTITUCIONAL", "BLOG", "ROTEIRO"],
+      filter_type: ["theme", "persona", "tag"],
       media_type: ["Imagem", "Vídeo", "Carrossel", "Texto blog"],
+      post_status: [
+        "idea",
+        "draft",
+        "review",
+        "approved",
+        "scheduled",
+        "published",
+      ],
       responsibility_type: ["Agência", "Cliente"],
       social_network: ["Facebook", "Instagram", "LinkedIn", "Site"],
+      user_role: ["OWNER", "ADMIN", "EDITOR", "VIEWER"],
     },
   },
 } as const
