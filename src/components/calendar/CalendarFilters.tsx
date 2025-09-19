@@ -44,7 +44,7 @@ export function CalendarFilters({
     filters.mediaTypes.length > 0 ||
     filters.clientId ||
     filters.companyId ||
-    (currentMonth !== undefined && currentMonth !== new Date().getMonth());
+    (currentMonth !== undefined && currentMonth !== new Date().getMonth() + 1);
 
   const clearAllFilters = () => {
     onFiltersChange({
@@ -57,7 +57,7 @@ export function CalendarFilters({
     onClientChange('');
     onCompanyChange('');
     if (onMonthChange) {
-      onMonthChange(new Date().getMonth());
+      onMonthChange(new Date().getMonth() + 1);
     }
   };
 
@@ -256,9 +256,9 @@ export function CalendarFilters({
               {[
                 'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
                 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
-              ].map((month, index) => (
-                <SelectItem key={index} value={index.toString()}>
-                  {month}
+               ].map((month, index) => (
+                 <SelectItem key={index + 1} value={(index + 1).toString()}>
+                   {month}
                 </SelectItem>
               ))}
             </SelectContent>
