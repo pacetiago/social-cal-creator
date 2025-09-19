@@ -1,5 +1,5 @@
 import { CalendarFilters as FiltersType, SocialNetwork, EditorialLine, MediaType, Client, Company } from "@/types/calendar";
-import { useAuth } from "@/hooks/useAuth";
+
 import {
   Select,
   SelectContent,
@@ -39,7 +39,7 @@ export function CalendarFilters({
   currentMonth,
   onMonthChange
 }: CalendarFiltersProps) {
-  const { user } = useAuth();
+  
   const hasActiveFilters = 
     filters.networks.length > 0 || 
     filters.editorialLines.length > 0 || 
@@ -136,7 +136,7 @@ export function CalendarFilters({
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-4 mb-4">
       {/* Client and Company Filters - Only for authenticated users */}
-      {user && clients.length > 0 && (
+      {clients.length > 0 && (
         <>
           {/* Client Filter */}
           <div>
@@ -160,7 +160,7 @@ export function CalendarFilters({
         </>
       )}
 
-      {user && selectedClient && (
+      {selectedClient && (
         <div>
           <label className="text-sm font-medium text-foreground mb-2 block flex items-center gap-2">
             <Building2 className="h-4 w-4" />

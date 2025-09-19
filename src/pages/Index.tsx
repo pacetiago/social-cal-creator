@@ -171,9 +171,9 @@ const Index = () => {
         <CalendarFilters 
           filters={filters}
           onFiltersChange={setFilters}
-          clients={user ? clients : []}
-          selectedClient={user ? selectedClient : undefined}
-          selectedCompany={user ? selectedCompany : undefined}
+          clients={clients}
+          selectedClient={selectedClient}
+          selectedCompany={selectedCompany}
           onClientChange={handleClientChange}
           onCompanyChange={handleCompanyChange}
           currentMonth={currentMonth}
