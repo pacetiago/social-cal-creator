@@ -75,10 +75,14 @@ export function useMemberships(orgId?: string) {
         .from('profiles')
         .select('id')
         .eq('email', membershipData.user_email)
-        .single();
+        .maybeSingle();
 
-      if (userError || !userData) {
-        throw new Error('Usuário não encontrado');
+      if (userError) {
+        throw new Error(`Erro ao buscar usuário: ${userError.message}`);
+      }
+
+      if (!userData) {
+        throw new Error('Usuário não encontrado. O usuário deve se registrar primeiro na plataforma antes de ser adicionado à organização.');
       }
 
       const { data, error: insertError } = await supabase

@@ -11,11 +11,13 @@ import { ClientFilters } from '@/components/calendar/ClientFilters';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Grid, List, Plus, Filter } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { Calendar, Grid, List, Plus, Filter, Share2 } from 'lucide-react';
 import { PostStatus, Post } from '@/types/multi-tenant';
 
 export default function ClientCalendar() {
   const { organization, loading: orgLoading, hasAccess, canEdit } = useOrganization();
+  const { toast } = useToast();
   const [selectedClient, setSelectedClient] = useState('');
   const [selectedCompany, setSelectedCompany] = useState('');
   const [selectedResponsibility, setSelectedResponsibility] = useState('');
@@ -91,6 +93,15 @@ export default function ClientCalendar() {
     }
   };
 
+  const handleGenerateLink = () => {
+    const currentUrl = window.location.href;
+    navigator.clipboard.writeText(currentUrl);
+    toast({
+      title: 'Link copiado!',
+      description: 'O link do calendário foi copiado para a área de transferência.',
+    });
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b">
@@ -120,6 +131,10 @@ export default function ClientCalendar() {
               <Button variant="outline" size="sm" onClick={() => setShowFilters(!showFilters)}>
                 <Filter className="h-4 w-4 mr-2" />
                 Filtros
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleGenerateLink}>
+                <Share2 className="h-4 w-4 mr-2" />
+                Gerar Link
               </Button>
               {canEdit && (
                 <Button onClick={() => handleCreatePost()}>
