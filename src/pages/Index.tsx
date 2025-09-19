@@ -7,7 +7,7 @@ import { CalendarAnalytics } from "@/components/calendar/CalendarAnalytics";
 import { PostModal } from "@/components/calendar/PostModal";
 import { PostForm } from "@/components/calendar/PostForm";
 import { CalendarPDFExport } from "@/components/calendar/CalendarPDFExport";
-import { PublicEmptyState } from "@/components/PublicEmptyState";
+
 import { UserMenu } from "@/components/UserMenu";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -170,9 +170,9 @@ const Index = () => {
         <CalendarFilters 
           filters={filters}
           onFiltersChange={setFilters}
-          clients={user ? clients : []}
-          selectedClient={user ? selectedClient : undefined}
-          selectedCompany={user ? selectedCompany : undefined}
+          clients={clients}
+          selectedClient={selectedClient}
+          selectedCompany={selectedCompany}
           onClientChange={handleClientChange}
           onCompanyChange={handleCompanyChange}
           currentMonth={currentMonth}
@@ -180,34 +180,30 @@ const Index = () => {
         />
 
         <div className="mt-6">
-          {!user ? (
-            <PublicEmptyState />
-          ) : (
+          {currentView === 'calendar' ? (
             <>
-              {currentView === 'calendar' ? (
-                <>
-                  <div className="flex justify-end mb-4">
-                    <CalendarPDFExport
-                      posts={filteredPosts}
-                      companies={user ? allCompanies : []}
-                      currentMonth={currentMonth}
-                      currentYear={currentYear}
-                      selectedClient={user ? selectedClientId : ''}
-                      selectedCompany={user ? selectedCompanyId : ''}
-                    />
-                  </div>
-                  <CalendarGrid
+              {user && (
+                <div className="flex justify-end mb-4">
+                  <CalendarPDFExport
                     posts={filteredPosts}
-                    onPostClick={handlePostClick}
-                    month={currentMonth}
-                    year={currentYear}
-                    companies={user ? allCompanies : []}
+                    companies={allCompanies}
+                    currentMonth={currentMonth}
+                    currentYear={currentYear}
+                    selectedClient={selectedClientId}
+                    selectedCompany={selectedCompanyId}
                   />
-                </>
-              ) : (
-                <CalendarAnalytics posts={filteredPosts} />
+                </div>
               )}
+              <CalendarGrid
+                posts={filteredPosts}
+                onPostClick={handlePostClick}
+                month={currentMonth}
+                year={currentYear}
+                companies={allCompanies}
+              />
             </>
+          ) : (
+            <CalendarAnalytics posts={filteredPosts} />
           )}
         </div>
 
@@ -218,18 +214,20 @@ const Index = () => {
             setIsPostModalOpen(false);
             setSelectedPost(null);
           }}
-          companies={user ? allCompanies : []}
-          onDelete={handleDeletePost}
+          companies={allCompanies}
+          onDelete={user ? handleDeletePost : undefined}
         />
 
-        <PostForm
-          isOpen={isFormOpen}
-          onClose={() => setIsFormOpen(false)}
-          onSave={handleSavePost}
-          clients={user ? clients : []}
-          defaultClientId={selectedClientId}
-          defaultCompanyId={selectedCompanyId}
-        />
+        {user && (
+          <PostForm
+            isOpen={isFormOpen}
+            onClose={() => setIsFormOpen(false)}
+            onSave={handleSavePost}
+            clients={clients}
+            defaultClientId={selectedClientId}
+            defaultCompanyId={selectedCompanyId}
+          />
+        )}
       </div>
     </div>
   );
