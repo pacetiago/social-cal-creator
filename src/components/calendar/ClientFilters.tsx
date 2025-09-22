@@ -35,7 +35,7 @@ export function ClientFilters({
           <Building className="mr-2 h-4 w-4" />
           <SelectValue placeholder="Cliente" />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="z-50 bg-popover text-popover-foreground border">
           <SelectItem value="">Todos os clientes</SelectItem>
           {clients.map((client) => (
             <SelectItem key={client.id} value={client.id}>
@@ -54,7 +54,7 @@ export function ClientFilters({
           <User className="mr-2 h-4 w-4" />
           <SelectValue placeholder="Empresa" />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="z-50 bg-popover text-popover-foreground border">
           <SelectItem value="">Todas as empresas</SelectItem>
           {companies.map((company) => (
             <SelectItem key={company.id} value={company.id}>
@@ -75,7 +75,7 @@ export function ClientFilters({
           <Briefcase className="mr-2 h-4 w-4" />
           <SelectValue placeholder="Responsabilidade" />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="z-50 bg-popover text-popover-foreground border">
           <SelectItem value="">Todas</SelectItem>
           <SelectItem value="agency">Agência</SelectItem>
           <SelectItem value="client">Cliente</SelectItem>

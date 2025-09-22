@@ -36,9 +36,9 @@ export function ModernPostForm({
   defaultDate,
   orgId 
 }: ModernPostFormProps) {
-  const { clients } = useClients(orgId);
+  const { clients, loading: clientsLoading, error: clientsError } = useClients(orgId);
   const [selectedClientId, setSelectedClientId] = useState(initialData?.client_id || '');
-  const { companies } = useCompanies(selectedClientId || undefined);
+  const { companies, loading: companiesLoading } = useCompanies(selectedClientId || undefined);
   const [formData, setFormData] = useState({
     title: initialData?.title || '',
     content: initialData?.content || '',
@@ -148,7 +148,17 @@ export function ModernPostForm({
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione um cliente..." />
                 </SelectTrigger>
-                <SelectContent className="bg-popover border">
+                <SelectContent className="z-50 bg-popover text-popover-foreground border">
+                  {clientsLoading && (
+                    <SelectItem value="__loading" disabled>
+                      Carregando...
+                    </SelectItem>
+                  )}
+                  {!clientsLoading && clients.length === 0 && (
+                    <SelectItem value="__empty" disabled>
+                      Nenhum cliente encontrado
+                    </SelectItem>
+                  )}
                   {clients.map((client) => (
                     <SelectItem key={client.id} value={client.id}>
                       {client.name}
@@ -168,7 +178,17 @@ export function ModernPostForm({
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione uma empresa..." />
                 </SelectTrigger>
-                <SelectContent className="bg-popover border">
+                <SelectContent className="z-50 bg-popover text-popover-foreground border">
+                  {companiesLoading && (
+                    <SelectItem value="__loading" disabled>
+                      Carregando...
+                    </SelectItem>
+                  )}
+                  {!companiesLoading && companies.length === 0 && (
+                    <SelectItem value="__empty" disabled>
+                      Nenhuma empresa encontrada
+                    </SelectItem>
+                  )}
                   {companies.map((company) => (
                     <SelectItem key={company.id} value={company.id}>
                       <div className="flex items-center gap-2">
@@ -195,7 +215,7 @@ export function ModernPostForm({
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-popover border">
+                <SelectContent className="z-50 bg-popover text-popover-foreground border">
                   <SelectItem value="agency">Agência</SelectItem>
                   <SelectItem value="client">Cliente</SelectItem>
                 </SelectContent>
@@ -211,7 +231,7 @@ export function ModernPostForm({
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-popover border">
+                <SelectContent className="z-50 bg-popover text-popover-foreground border">
                   <SelectItem value="idea">Ideia</SelectItem>
                   <SelectItem value="draft">Rascunho</SelectItem>
                   <SelectItem value="review">Em Revisão</SelectItem>
@@ -238,7 +258,7 @@ export function ModernPostForm({
                     )}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
+                <PopoverContent className="w-auto p-0 z-50">
                   <Calendar
                     mode="single"
                     selected={formData.publish_at}

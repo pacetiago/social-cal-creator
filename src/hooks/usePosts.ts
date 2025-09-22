@@ -79,9 +79,15 @@ export function usePosts(options: UsePostsOptions = {}) {
 
   const addPost = async (postData: Omit<Post, 'id' | 'created_at' | 'updated_at'>) => {
     try {
+      if (!options.orgId) {
+        const message = 'Organização não encontrada para criar o post';
+        toast({ title: 'Erro ao criar post', description: message, variant: 'destructive' });
+        return { data: null, error: message };
+      }
+
       const { data, error: insertError } = await supabase
         .from('posts')
-        .insert([postData])
+        .insert([{ ...postData, org_id: options.orgId }])
         .select(`
           *,
           campaign:campaigns(*),
