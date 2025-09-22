@@ -14,7 +14,8 @@ interface CalendarViewProps {
 }
 
 export function CalendarView({ posts, onPostClick, onCreatePost, canEdit }: CalendarViewProps) {
-  const [currentDate, setCurrentDate] = useState(new Date());
+  // Initialize with October 2024 to show the posts
+  const [currentDate, setCurrentDate] = useState(new Date(2024, 9, 1)); // October 2024
   
   const currentMonth = currentDate.getMonth();
   const currentYear = currentDate.getFullYear();
