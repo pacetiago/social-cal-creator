@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -29,22 +29,38 @@ export function CalendarView({ posts, onPostClick, onCreatePost, canEdit }: Cale
     'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
   ];
 
-  // Normalize a date to a YYYY-MM-DD key in UTC to avoid timezone shifts
-  const toDateKeyUTC = (d: Date) =>
-    new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()))
-      .toISOString()
-      .slice(0, 10);
+  const pad2 = (n: number) => n.toString().padStart(2, '0');
+  const makeKey = (y: number, m: number, d: number) => `${y}-${pad2(m + 1)}-${pad2(d)}`;
+
+  const postsByDate = useMemo(() => {
+    const map: Record<string, Post[]> = {};
+    posts.forEach((post) => {
+      const raw = post.publish_at as string | undefined;
+      if (!raw) return;
+      let key: string | null = null;
+
+      if (typeof raw === 'string') {
+        const match = raw.match(/^\d{4}-\d{2}-\d{2}/);
+        if (match) {
+          key = match[0];
+        }
+      }
+      if (!key) {
+        const d = new Date(raw as any);
+        if (!isNaN(d.getTime())) {
+          key = makeKey(d.getFullYear(), d.getMonth(), d.getDate());
+        }
+      }
+      if (key) {
+        (map[key] ||= []).push(post);
+      }
+    });
+    return map;
+  }, [posts]);
 
   const getPostsForDay = (day: number) => {
-    const cellDate = new Date(currentYear, currentMonth, day);
-    const cellKey = toDateKeyUTC(cellDate);
-
-    return posts.filter((post) => {
-      if (!post.publish_at) return false;
-      const postDate = new Date(post.publish_at);
-      const postKey = postDate.toISOString().slice(0, 10);
-      return postKey === cellKey;
-    });
+    const key = makeKey(currentYear, currentMonth, day);
+    return postsByDate[key] || [];
   };
 
   const getStatusColor = (status: PostStatus) => {
