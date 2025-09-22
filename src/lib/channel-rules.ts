@@ -88,6 +88,55 @@ export const CHANNEL_LIMITS: Record<ChannelKey, ChannelLimits[string]> = {
       'Use timestamps para vídeos longos',
       'Links são permitidos na descrição'
     ]
+  },
+  blog: {
+    maxLength: 10000,
+    recommendedLength: 300,
+    allowHashtags: false,
+    allowMentions: false,
+    allowLinks: true,
+    specificRules: [
+      'Conteúdo longo é bem-vindo',
+      'Use subtítulos para organizar',
+      'Links internos e externos são recomendados'
+    ]
+  },
+  ebook: {
+    maxLength: 50000,
+    recommendedLength: 1000,
+    allowHashtags: false,
+    allowMentions: false,
+    allowLinks: true,
+    specificRules: [
+      'Formato de documento longo',
+      'Organize em capítulos',
+      'Inclua índice e referências'
+    ]
+  },
+  facebook: {
+    maxLength: 63206,
+    recommendedLength: 300,
+    allowHashtags: true,
+    allowMentions: true,
+    allowLinks: true,
+    maxHashtags: 10,
+    specificRules: [
+      'Primeiras 2 linhas aparecem no feed',
+      'Use hashtags com moderação',
+      'Links geram preview automático'
+    ]
+  },
+  roteiro: {
+    maxLength: 10000,
+    recommendedLength: 500,
+    allowHashtags: false,
+    allowMentions: false,
+    allowLinks: false,
+    specificRules: [
+      'Estruture com início, meio e fim',
+      'Inclua indicações técnicas',
+      'Defina tom e linguagem'
+    ]
   }
 };
 

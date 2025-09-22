@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Post, Channel, Campaign, PostStatus } from '@/types/multi-tenant';
 import { useClients, Client } from '@/hooks/useClients';
 import { useCompanies, Company } from '@/hooks/useCompanies';
@@ -42,7 +43,7 @@ export function ModernPostForm({
     title: initialData?.title || '',
     content: initialData?.content || '',
     status: (initialData?.status || 'idea') as PostStatus,
-    channel_id: initialData?.channel_id || '',
+    channel_ids: initialData?.channel_ids || [initialData?.channel_id].filter(Boolean) || [],
     campaign_id: initialData?.campaign_id || '',
     client_id: initialData?.client_id || '',
     company_id: initialData?.company_id || '',
@@ -50,7 +51,7 @@ export function ModernPostForm({
     theme: initialData?.theme || '',
     persona: initialData?.persona || '',
     insights: initialData?.insights || '',
-    responsibility: (initialData as any)?.responsibility || 'agency'
+    responsibility: initialData?.responsibility || 'agency'
   });
   const [loading, setLoading] = useState(false);
 
@@ -68,7 +69,8 @@ export function ModernPostForm({
         title: formData.title,
         content: formData.content,
         status: formData.status,
-        channel_id: formData.channel_id || null,
+        channel_id: formData.channel_ids[0] || null, // For compatibility, use first channel
+        channel_ids: formData.channel_ids,
         campaign_id: formData.campaign_id || null,
         client_id: formData.client_id || null,
         company_id: formData.company_id || null,
@@ -76,7 +78,7 @@ export function ModernPostForm({
         theme: formData.theme,
         persona: formData.persona,
         insights: formData.insights,
-        // responsibility: (formData as any).responsibility,
+        responsibility: formData.responsibility,
         utm_source: null,
         utm_campaign: null,
         utm_content: null,
@@ -98,7 +100,7 @@ export function ModernPostForm({
       title: '',
       content: '',
       status: 'idea',
-      channel_id: '',
+      channel_ids: [],
       campaign_id: '',
       client_id: '',
       company_id: '',
@@ -187,7 +189,7 @@ export function ModernPostForm({
             <div>
               <Label htmlFor="responsibility">Responsabilidade</Label>
               <Select
-                value={(formData as any).responsibility}
+                value={formData.responsibility}
                 onValueChange={(value) => setFormData(prev => ({ ...prev, responsibility: value as 'client' | 'agency' }))}
               >
                 <SelectTrigger>
@@ -242,28 +244,43 @@ export function ModernPostForm({
                     selected={formData.publish_at}
                     onSelect={(date) => setFormData(prev => ({ ...prev, publish_at: date }))}
                     initialFocus
+                    className="pointer-events-auto"
                   />
                 </PopoverContent>
               </Popover>
             </div>
 
             <div>
-              <Label htmlFor="channel">Canal</Label>
-              <Select
-                value={formData.channel_id}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, channel_id: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione um canal..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {channels.map((channel) => (
-                    <SelectItem key={channel.id} value={channel.id}>
+              <Label htmlFor="channels">Canais (múltipla seleção)</Label>
+              <div className="space-y-2 max-h-32 overflow-y-auto border rounded-md p-3">
+                {channels.map((channel) => (
+                  <div key={channel.id} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`channel-${channel.id}`}
+                      checked={formData.channel_ids.includes(channel.id)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setFormData(prev => ({
+                            ...prev,
+                            channel_ids: [...prev.channel_ids, channel.id]
+                          }));
+                        } else {
+                          setFormData(prev => ({
+                            ...prev,
+                            channel_ids: prev.channel_ids.filter(id => id !== channel.id)
+                          }));
+                        }
+                      }}
+                    />
+                    <Label htmlFor={`channel-${channel.id}`} className="text-sm font-normal">
                       {channel.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                    </Label>
+                  </div>
+                ))}
+                {channels.length === 0 && (
+                  <p className="text-sm text-muted-foreground">Nenhum canal disponível</p>
+                )}
+              </div>
             </div>
           </div>
 

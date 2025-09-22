@@ -1,6 +1,6 @@
 export type UserRole = 'OWNER' | 'ADMIN' | 'EDITOR' | 'VIEWER';
 export type PostStatus = 'idea' | 'draft' | 'review' | 'approved' | 'scheduled' | 'published';
-export type ChannelKey = 'instagram' | 'linkedin' | 'x' | 'tiktok' | 'youtube';
+export type ChannelKey = 'instagram' | 'linkedin' | 'x' | 'tiktok' | 'youtube' | 'blog' | 'ebook' | 'facebook' | 'roteiro';
 export type AssetKind = 'image' | 'video' | 'doc';
 export type FilterType = 'theme' | 'persona' | 'tag';
 
@@ -75,6 +75,7 @@ export interface Post {
   org_id: string;
   campaign_id?: string;
   channel_id?: string;
+  channel_ids?: string[]; // Support for multiple channels
   client_id?: string;
   company_id?: string;
   status: PostStatus;
@@ -89,6 +90,7 @@ export interface Post {
   utm_content?: string;
   insights?: string;
   variations: any[];
+  responsibility?: 'client' | 'agency';
   created_at: string;
   updated_at: string;
   created_by?: string;
