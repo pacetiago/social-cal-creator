@@ -116,7 +116,7 @@ export function ModernPostForm({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-background border z-50">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold">
             {initialData ? 'Editar Post' : 'Novo Post'}
@@ -148,7 +148,7 @@ export function ModernPostForm({
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione um cliente..." />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-popover border">
                   {clients.map((client) => (
                     <SelectItem key={client.id} value={client.id}>
                       {client.name}
@@ -168,7 +168,7 @@ export function ModernPostForm({
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione uma empresa..." />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-popover border">
                   {companies.map((company) => (
                     <SelectItem key={company.id} value={company.id}>
                       <div className="flex items-center gap-2">
@@ -195,7 +195,7 @@ export function ModernPostForm({
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-popover border">
                   <SelectItem value="agency">Agência</SelectItem>
                   <SelectItem value="client">Cliente</SelectItem>
                 </SelectContent>
@@ -211,7 +211,7 @@ export function ModernPostForm({
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-popover border">
                   <SelectItem value="idea">Ideia</SelectItem>
                   <SelectItem value="draft">Rascunho</SelectItem>
                   <SelectItem value="review">Em Revisão</SelectItem>

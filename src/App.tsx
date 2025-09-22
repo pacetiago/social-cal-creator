@@ -63,7 +63,7 @@ const App = () => (
             } />
             
             {/* Client Portal Routes */}
-            <Route path="/c/:slug/calendar" element={
+            <Route path="/c/:slug" element={
               <ProtectedRoute>
                 <ClientCalendar />
               </ProtectedRoute>
