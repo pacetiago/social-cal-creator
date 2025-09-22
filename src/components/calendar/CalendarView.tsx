@@ -85,7 +85,7 @@ export function CalendarView({ posts, onPostClick, onCreatePost, canEdit }: Cale
             "h-32 p-2 cursor-pointer transition-all duration-300 hover:shadow-md border-border/30",
             hasContent && "bg-gradient-to-br from-card to-muted/50"
           )}
-          onClick={() => canEdit && onCreatePost && onCreatePost(new Date(currentYear, currentMonth, day))}
+          onClick={() => !hasContent && canEdit && onCreatePost && onCreatePost(new Date(currentYear, currentMonth, day))}
         >
           <div className="h-full flex flex-col">
             <div className="flex items-center justify-between mb-1">
