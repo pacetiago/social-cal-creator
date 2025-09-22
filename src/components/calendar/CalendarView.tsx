@@ -29,13 +29,21 @@ export function CalendarView({ posts, onPostClick, onCreatePost, canEdit }: Cale
     'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
   ];
 
+  // Normalize a date to a YYYY-MM-DD key in UTC to avoid timezone shifts
+  const toDateKeyUTC = (d: Date) =>
+    new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()))
+      .toISOString()
+      .slice(0, 10);
+
   const getPostsForDay = (day: number) => {
-    return posts.filter(post => {
+    const cellDate = new Date(currentYear, currentMonth, day);
+    const cellKey = toDateKeyUTC(cellDate);
+
+    return posts.filter((post) => {
       if (!post.publish_at) return false;
       const postDate = new Date(post.publish_at);
-      return postDate.getDate() === day && 
-             postDate.getMonth() === currentMonth && 
-             postDate.getFullYear() === currentYear;
+      const postKey = postDate.toISOString().slice(0, 10);
+      return postKey === cellKey;
     });
   };
 
@@ -85,7 +93,14 @@ export function CalendarView({ posts, onPostClick, onCreatePost, canEdit }: Cale
             "h-32 p-2 cursor-pointer transition-all duration-300 hover:shadow-md border-border/30",
             hasContent && "bg-gradient-to-br from-card to-muted/50"
           )}
-          onClick={() => !hasContent && canEdit && onCreatePost && onCreatePost(new Date(currentYear, currentMonth, day))}
+          onClick={() => {
+            if (!canEdit) return;
+            if (hasContent) {
+              onPostClick(dayPosts[0]);
+            } else if (onCreatePost) {
+              onCreatePost(new Date(currentYear, currentMonth, day));
+            }
+          }}
         >
           <div className="h-full flex flex-col">
             <div className="flex items-center justify-between mb-1">
