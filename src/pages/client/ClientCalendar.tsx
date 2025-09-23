@@ -303,6 +303,7 @@ export default function ClientCalendar() {
           campaigns={campaigns}
           defaultDate={defaultDate}
           orgId={organization?.id}
+          clients={clients}
         />
       </main>
     </div>

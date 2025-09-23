@@ -24,6 +24,7 @@ interface ModernPostFormProps {
   campaigns: Campaign[];
   defaultDate?: Date;
   orgId?: string;
+  clients?: Client[];
 }
 
 export function ModernPostForm({ 
@@ -34,9 +35,13 @@ export function ModernPostForm({
   channels, 
   campaigns,
   defaultDate,
-  orgId 
+  orgId,
+  clients: clientsProp
 }: ModernPostFormProps) {
-  const { clients, loading: clientsLoading, error: clientsError } = useClients(orgId);
+  const clientsHook = useClients(orgId);
+  const clients: Client[] = (clientsProp ?? clientsHook.clients);
+  const clientsLoading = clientsProp ? false : clientsHook.loading;
+  const clientsError = clientsProp ? null : clientsHook.error;
   const [selectedClientId, setSelectedClientId] = useState(initialData?.client_id || '');
   const { companies, loading: companiesLoading } = useCompanies(selectedClientId || undefined);
   const [formData, setFormData] = useState({
