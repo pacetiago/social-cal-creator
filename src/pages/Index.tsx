@@ -22,7 +22,7 @@ export default function Index() {
       // Check if user has access to any organization
       if (userOrganizations.length > 0) {
         // Redirect to first organization calendar
-        navigate(`/c/${userOrganizations[0].slug}/calendar`);
+        navigate(`/c/${userOrganizations[0].slug}`);
       } else {
         // User has no organizations, show create org screen
         navigate('/admin/orgs');
