@@ -20,7 +20,9 @@ export function useClients(orgId?: string) {
   const { toast } = useToast();
 
   const fetchClients = async () => {
+    console.log('useClients: fetchClients called with orgId:', orgId);
     if (!orgId) {
+      console.log('useClients: No orgId provided, clearing clients');
       setClients([]);
       setLoading(false);
       return;
@@ -28,6 +30,7 @@ export function useClients(orgId?: string) {
 
     try {
       setLoading(true);
+      console.log('useClients: Making query to fetch clients for orgId:', orgId);
 
       const { data, error: fetchError } = await supabase
         .from('clients')
@@ -36,14 +39,18 @@ export function useClients(orgId?: string) {
         .eq('is_active', true)
         .order('name');
 
+      console.log('useClients: Query result:', { data, error: fetchError });
+
       if (fetchError) throw fetchError;
 
       setClients(data || []);
       setError(null);
+      console.log('useClients: Successfully set clients:', data || []);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to fetch clients';
       setError(message);
-      console.error('Clients fetch error:', err);
+      console.error('useClients: Error fetching clients:', err);
+      console.error('useClients: Error message:', message);
     } finally {
       setLoading(false);
     }

@@ -17,6 +17,7 @@ import { PostStatus, Post } from '@/types/multi-tenant';
 
 export default function ClientCalendar() {
   const { organization, loading: orgLoading, hasAccess, canEdit } = useOrganization();
+  console.log('ClientCalendar: organization:', organization);
   const { toast } = useToast();
   const [selectedClient, setSelectedClient] = useState('');
   const [selectedCompany, setSelectedCompany] = useState('');
@@ -31,6 +32,7 @@ export default function ClientCalendar() {
   const { channels } = useChannels(organization?.id);
   const { campaigns } = useCampaigns(organization?.id);
   const { clients } = useClients(organization?.id);
+  console.log('ClientCalendar: clients from useClients:', clients);
   const { companies } = useCompanies(selectedClient || undefined);
   
   const [view, setView] = useState<'calendar' | 'list'>('calendar');
