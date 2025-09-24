@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useOrganization } from '@/hooks/useOrganization';
 import { usePosts } from '@/hooks/usePosts';
 import { useChannels } from '@/hooks/useChannels';
 import { useCampaigns } from '@/hooks/useCampaigns';
 import { useClients } from '@/hooks/useClients';
 import { useCompanies } from '@/hooks/useCompanies';
+import { usePublicCalendar } from '@/hooks/usePublicCalendar';
+import { useShareToken } from '@/hooks/useShareToken';
 import { CalendarView } from '@/components/calendar/CalendarView';
 import { ModernPostForm } from '@/components/calendar/ModernPostForm';
 import { ClientFilters } from '@/components/calendar/ClientFilters';
@@ -17,23 +19,50 @@ import { PostStatus, Post } from '@/types/multi-tenant';
 
 export default function ClientCalendar() {
   const { organization, loading: orgLoading, hasAccess, canEdit } = useOrganization();
-  console.log('ClientCalendar: organization:', organization);
   const { toast } = useToast();
   const [selectedClient, setSelectedClient] = useState('');
   const [selectedCompany, setSelectedCompany] = useState('');
   const [selectedResponsibility, setSelectedResponsibility] = useState('');
   
-  const { posts, loading: postsLoading, addPost, updatePost } = usePosts({
+  // Check for share token in URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const shareToken = urlParams.get('share');
+  const isPublicView = !!shareToken;
+
+  // Public calendar data
+  const { 
+    data: publicData, 
+    loading: publicLoading, 
+    error: publicError,
+    isValidToken 
+  } = usePublicCalendar({
+    token: shareToken || undefined,
+    clientId: selectedClient || undefined,
+    companyId: selectedCompany || undefined,
+    responsibility: selectedResponsibility || undefined
+  });
+
+  // Private calendar data (authenticated users)
+  const { posts: privatePosts, loading: postsLoading, addPost, updatePost } = usePosts({
     orgId: organization?.id,
     clientId: selectedClient || undefined,
     companyId: selectedCompany || undefined,
     responsibility: selectedResponsibility || undefined
   });
-  const { channels } = useChannels(organization?.id);
-  const { campaigns } = useCampaigns(organization?.id);
-  const { clients } = useClients(organization?.id);
-  console.log('ClientCalendar: clients from useClients:', clients);
-  const { companies } = useCompanies(selectedClient || undefined);
+  const { channels: privateChannels } = useChannels(organization?.id);
+  const { campaigns: privateCampaigns } = useCampaigns(organization?.id);
+  const { clients: privateClients } = useClients(organization?.id);
+  const { companies: privateCompanies } = useCompanies(selectedClient || undefined);
+  const { generatePublicLink, loading: shareLoading } = useShareToken(organization?.id);
+
+  // Use public or private data based on view mode
+  const currentOrg = isPublicView ? publicData?.organization : organization;
+  const posts = isPublicView ? (publicData?.posts || []) : privatePosts;
+  const channels = isPublicView ? (publicData?.channels || []) : privateChannels;
+  const campaigns = isPublicView ? (publicData?.campaigns || []) : privateCampaigns;
+  const clients = isPublicView ? (publicData?.clients || []) : privateClients;
+  const companies = isPublicView ? (publicData?.companies || []) : privateCompanies;
+  const loading = isPublicView ? publicLoading : (orgLoading || postsLoading);
   
   const [view, setView] = useState<'calendar' | 'list'>('calendar');
   const [showPostForm, setShowPostForm] = useState(false);
@@ -41,7 +70,7 @@ export default function ClientCalendar() {
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [defaultDate, setDefaultDate] = useState<Date | undefined>();
 
-  if (orgLoading || postsLoading) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -49,7 +78,24 @@ export default function ClientCalendar() {
     );
   }
 
-  if (!hasAccess) {
+  // Public view with invalid token
+  if (isPublicView && isValidToken === false) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle>Link Inválido</CardTitle>
+            <CardDescription>
+              Este link de compartilhamento é inválido ou expirou.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+    );
+  }
+
+  // Private view without access
+  if (!isPublicView && !hasAccess) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Card className="w-full max-w-md">
@@ -95,13 +141,8 @@ export default function ClientCalendar() {
     }
   };
 
-  const handleGenerateLink = () => {
-    const currentUrl = window.location.href;
-    navigator.clipboard.writeText(currentUrl);
-    toast({
-      title: 'Link copiado!',
-      description: 'O link do calendário foi copiado para a área de transferência.',
-    });
+  const handleGenerateLink = async () => {
+    await generatePublicLink();
   };
 
   return (
@@ -110,8 +151,10 @@ export default function ClientCalendar() {
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold">{organization?.name}</h1>
-              <p className="text-muted-foreground">Calendário Editorial</p>
+              <h1 className="text-2xl font-bold">{currentOrg?.name}</h1>
+              <p className="text-muted-foreground">
+                Calendário Editorial {isPublicView && '(Visualização Pública)'}
+              </p>
             </div>
             <div className="flex items-center space-x-2">
               <Button
@@ -134,11 +177,18 @@ export default function ClientCalendar() {
                 <Filter className="h-4 w-4 mr-2" />
                 Filtros
               </Button>
-              <Button variant="outline" size="sm" onClick={handleGenerateLink}>
-                <Share2 className="h-4 w-4 mr-2" />
-                Gerar Link
-              </Button>
-              {canEdit && (
+              {!isPublicView && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleGenerateLink}
+                  disabled={shareLoading}
+                >
+                  <Share2 className="h-4 w-4 mr-2" />
+                  {shareLoading ? 'Gerando...' : 'Gerar Link Público'}
+                </Button>
+              )}
+              {!isPublicView && canEdit && (
                 <Button onClick={() => handleCreatePost()}>
                   <Plus className="h-4 w-4 mr-2" />
                   Novo Post
@@ -267,8 +317,8 @@ export default function ClientCalendar() {
               <CalendarView
                 posts={posts}
                 onPostClick={handlePostClick}
-                onCreatePost={canEdit ? handleCreatePost : undefined}
-                canEdit={canEdit}
+                onCreatePost={!isPublicView && canEdit ? handleCreatePost : undefined}
+                canEdit={!isPublicView && canEdit}
               />
             )}
           </div>
@@ -290,21 +340,23 @@ export default function ClientCalendar() {
           )}
         </div>
 
-        <ModernPostForm
-          isOpen={showPostForm}
-          onClose={() => {
-            setShowPostForm(false);
-            setSelectedPost(null);
-            setDefaultDate(undefined);
-          }}
-          onSave={handleSavePost}
-          initialData={selectedPost}
-          channels={channels}
-          campaigns={campaigns}
-          defaultDate={defaultDate}
-          orgId={organization?.id}
-          clients={clients}
-        />
+        {!isPublicView && (
+          <ModernPostForm
+            isOpen={showPostForm}
+            onClose={() => {
+              setShowPostForm(false);
+              setSelectedPost(null);
+              setDefaultDate(undefined);
+            }}
+            onSave={handleSavePost}
+            initialData={selectedPost}
+            channels={channels}
+            campaigns={campaigns}
+            defaultDate={defaultDate}
+            orgId={organization?.id}
+            clients={clients}
+          />
+        )}
       </main>
     </div>
   );

@@ -75,6 +75,19 @@ export function CalendarView({ posts, onPostClick, onCreatePost, canEdit }: Cale
     }
   };
 
+  const getChannelIcon = (channelKey: string) => {
+    switch (channelKey?.toLowerCase()) {
+      case 'instagram': return '📷';
+      case 'facebook': return '📘';
+      case 'linkedin': return '💼';
+      case 'twitter': return '🐦';
+      case 'youtube': return '📺';
+      case 'tiktok': return '🎵';
+      case 'whatsapp': return '💬';
+      default: return '📱';
+    }
+  };
+
   const navigateMonth = (direction: 'prev' | 'next') => {
     setCurrentDate(prev => {
       const newDate = new Date(prev);
@@ -148,9 +161,16 @@ export function CalendarView({ posts, onPostClick, onCreatePost, canEdit }: Cale
                         {post.title}
                       </div>
                     </div>
-                    <Badge variant="outline" className="text-xs px-1 py-0">
-                      Post
-                    </Badge>
+                    <div className="flex items-center gap-1">
+                      {(post as any).channel && (
+                        <span className="text-xs" title={`Canal: ${(post as any).channel.name}`}>
+                          {getChannelIcon((post as any).channel.key)}
+                        </span>
+                      )}
+                      <Badge variant="outline" className="text-xs px-1 py-0">
+                        Post
+                      </Badge>
+                    </div>
                   </div>
                 ))}
                 
