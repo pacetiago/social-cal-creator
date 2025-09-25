@@ -9,6 +9,14 @@ interface ProtectedRouteProps {
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { user, loading } = useAuth();
 
+  // Allow public access when a valid share token is present in the URL
+  const urlHasShare = typeof window !== 'undefined' &&
+    new URLSearchParams(window.location.search).has('share');
+
+  if (urlHasShare) {
+    return <>{children}</>;
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
