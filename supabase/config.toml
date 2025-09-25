@@ -86,3 +86,6 @@ verify_jwt = false
 
 [functions.public-calendar]
 verify_jwt = false
+
+[functions.rate-limit]
+verify_jwt = false

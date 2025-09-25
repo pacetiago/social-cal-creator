@@ -12,6 +12,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { createUserSchema, sanitizeInput } from '@/lib/validation';
+import type { CreateUserData } from '@/lib/validation';
 
 export default function AdminUsers() {
   const { users, loading, updateUser } = useUsers();
@@ -25,6 +27,7 @@ export default function AdminUsers() {
     role: 'user'
   });
   const [creating, setCreating] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
   const filteredUsers = users.filter(user =>
     user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -38,8 +41,20 @@ export default function AdminUsers() {
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
     setCreating(true);
+    setValidationErrors({});
 
     try {
+      // Sanitize and validate input
+      const sanitizedData = {
+        email: sanitizeInput(newUserData.email),
+        password: newUserData.password,
+        full_name: sanitizeInput(newUserData.full_name),
+        role: newUserData.role as 'user' | 'admin' | 'platform_admin',
+      };
+
+      // Validate with Zod schema
+      const validatedData = createUserSchema.parse(sanitizedData);
+
       // Get the current session to send with the request
       const { data: { session } } = await supabase.auth.getSession();
       
@@ -50,10 +65,10 @@ export default function AdminUsers() {
       // Call our edge function to create the user
       const { data, error } = await supabase.functions.invoke('create-user', {
         body: {
-          email: newUserData.email,
-          password: newUserData.password,
-          fullName: newUserData.full_name,
-          role: newUserData.role
+          email: validatedData.email,
+          password: validatedData.password,
+          fullName: validatedData.full_name,
+          role: validatedData.role
         },
         headers: {
           Authorization: `Bearer ${session.access_token}`,
@@ -64,18 +79,27 @@ export default function AdminUsers() {
 
       toast({
         title: 'Usuário criado com sucesso',
-        description: `${newUserData.full_name} foi adicionado ao sistema.`,
+        description: `${validatedData.full_name} foi adicionado ao sistema.`,
       });
 
       setNewUserData({ email: '', password: '', full_name: '', role: 'user' });
       setShowCreateUser(false);
-    } catch (err) {
-      console.error('Error creating user:', err);
-      toast({
-        title: 'Erro ao criar usuário',
-        description: err instanceof Error ? err.message : 'Falha ao criar usuário',
-        variant: 'destructive',
-      });
+    } catch (err: any) {
+      if (err.errors) {
+        // Zod validation errors
+        const newErrors: Record<string, string> = {};
+        err.errors.forEach((error: any) => {
+          newErrors[error.path[0]] = error.message;
+        });
+        setValidationErrors(newErrors);
+      } else {
+        console.error('Error creating user:', err);
+        toast({
+          title: 'Erro ao criar usuário',
+          description: err instanceof Error ? err.message : 'Falha ao criar usuário',
+          variant: 'destructive',
+        });
+      }
     } finally {
       setCreating(false);
     }
@@ -119,7 +143,11 @@ export default function AdminUsers() {
                       value={newUserData.full_name}
                       onChange={(e) => setNewUserData(prev => ({ ...prev, full_name: e.target.value }))}
                       required
+                      maxLength={100}
                     />
+                    {validationErrors.full_name && (
+                      <p className="text-sm text-destructive">{validationErrors.full_name}</p>
+                    )}
                   </div>
                   <div>
                     <Label htmlFor="email">Email</Label>
@@ -129,7 +157,11 @@ export default function AdminUsers() {
                       value={newUserData.email}
                       onChange={(e) => setNewUserData(prev => ({ ...prev, email: e.target.value }))}
                       required
+                      maxLength={255}
                     />
+                    {validationErrors.email && (
+                      <p className="text-sm text-destructive">{validationErrors.email}</p>
+                    )}
                   </div>
                   <div>
                     <Label htmlFor="password">Senha</Label>
@@ -139,8 +171,15 @@ export default function AdminUsers() {
                       value={newUserData.password}
                       onChange={(e) => setNewUserData(prev => ({ ...prev, password: e.target.value }))}
                       required
-                      minLength={6}
+                      minLength={8}
+                      maxLength={128}
                     />
+                    {validationErrors.password && (
+                      <p className="text-sm text-destructive">{validationErrors.password}</p>
+                    )}
+                    <p className="text-xs text-muted-foreground">
+                      Mín. 8 caracteres com maiúscula, minúscula, número e caractere especial
+                    </p>
                   </div>
                   <div>
                     <Label htmlFor="role">Função</Label>

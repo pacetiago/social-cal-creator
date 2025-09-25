@@ -6,10 +6,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useToast } from '@/hooks/use-toast';
+import { signInSchema, signUpSchema, sanitizeInput } from '@/lib/validation';
+import type { SignInData, SignUpData } from '@/lib/validation';
 
 export default function Auth() {
   const { user, loading, signIn, signUp } = useAuth();
+  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Redirect if already authenticated
   if (user && !loading) {
@@ -19,26 +24,103 @@ export default function Auth() {
   const handleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
+    setErrors({});
     
-    const formData = new FormData(e.currentTarget);
-    const email = formData.get('email') as string;
-    const password = formData.get('password') as string;
-    
-    await signIn(email, password);
-    setIsLoading(false);
+    try {
+      const formData = new FormData(e.currentTarget);
+      const rawData = {
+        email: sanitizeInput(formData.get('email') as string),
+        password: formData.get('password') as string,
+      };
+
+      // Validate input
+      const validatedData = signInSchema.parse(rawData);
+      
+      const { error } = await signIn(validatedData.email, validatedData.password);
+      
+      if (error) {
+        toast({
+          title: 'Erro ao entrar',
+          description: 'Email ou senha incorretos. Tente novamente.',
+          variant: 'destructive',
+        });
+      }
+    } catch (err: any) {
+      if (err.errors) {
+        // Zod validation errors
+        const newErrors: Record<string, string> = {};
+        err.errors.forEach((error: any) => {
+          newErrors[error.path[0]] = error.message;
+        });
+        setErrors(newErrors);
+      } else {
+        toast({
+          title: 'Erro ao entrar',
+          description: 'Ocorreu um erro inesperado. Tente novamente.',
+          variant: 'destructive',
+        });
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
+    setErrors({});
     
-    const formData = new FormData(e.currentTarget);
-    const email = formData.get('email') as string;
-    const password = formData.get('password') as string;
-    const fullName = formData.get('fullName') as string;
-    
-    await signUp(email, password, fullName);
-    setIsLoading(false);
+    try {
+      const formData = new FormData(e.currentTarget);
+      const rawData = {
+        email: sanitizeInput(formData.get('email') as string),
+        password: formData.get('password') as string,
+        fullName: sanitizeInput(formData.get('fullName') as string),
+      };
+
+      // Validate input
+      const validatedData = signUpSchema.parse(rawData);
+      
+      const { error } = await signUp(validatedData.email, validatedData.password, validatedData.fullName);
+      
+      if (error) {
+        if (error.message.includes('already registered')) {
+          toast({
+            title: 'Email já cadastrado',
+            description: 'Este email já está cadastrado. Tente fazer login.',
+            variant: 'destructive',
+          });
+        } else {
+          toast({
+            title: 'Erro ao cadastrar',
+            description: 'Não foi possível criar sua conta. Tente novamente.',
+            variant: 'destructive',
+          });
+        }
+      } else {
+        toast({
+          title: 'Conta criada com sucesso!',
+          description: 'Verifique seu email para confirmar sua conta.',
+        });
+      }
+    } catch (err: any) {
+      if (err.errors) {
+        // Zod validation errors
+        const newErrors: Record<string, string> = {};
+        err.errors.forEach((error: any) => {
+          newErrors[error.path[0]] = error.message;
+        });
+        setErrors(newErrors);
+      } else {
+        toast({
+          title: 'Erro ao cadastrar',
+          description: 'Ocorreu um erro inesperado. Tente novamente.',
+          variant: 'destructive',
+        });
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (loading) {
@@ -75,7 +157,11 @@ export default function Auth() {
                     type="email"
                     placeholder="seu@email.com"
                     required
+                    maxLength={255}
                   />
+                  {errors.email && (
+                    <p className="text-sm text-destructive">{errors.email}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signin-password">Senha</Label>
@@ -85,7 +171,11 @@ export default function Auth() {
                     type="password"
                     placeholder="••••••••"
                     required
+                    maxLength={128}
                   />
+                  {errors.password && (
+                    <p className="text-sm text-destructive">{errors.password}</p>
+                  )}
                 </div>
                 <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading ? "Entrando..." : "Entrar"}
@@ -103,7 +193,11 @@ export default function Auth() {
                     type="text"
                     placeholder="Seu nome completo"
                     required
+                    maxLength={100}
                   />
+                  {errors.fullName && (
+                    <p className="text-sm text-destructive">{errors.fullName}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-email">Email</Label>
@@ -113,7 +207,11 @@ export default function Auth() {
                     type="email"
                     placeholder="seu@email.com"
                     required
+                    maxLength={255}
                   />
+                  {errors.email && (
+                    <p className="text-sm text-destructive">{errors.email}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-password">Senha</Label>
@@ -122,9 +220,16 @@ export default function Auth() {
                     name="password"
                     type="password"
                     placeholder="••••••••"
-                    minLength={6}
+                    minLength={8}
+                    maxLength={128}
                     required
                   />
+                  {errors.password && (
+                    <p className="text-sm text-destructive">{errors.password}</p>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    Mín. 8 caracteres com maiúscula, minúscula, número e caractere especial
+                  </p>
                 </div>
                 <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading ? "Cadastrando..." : "Cadastrar"}

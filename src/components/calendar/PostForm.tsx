@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { CalendarPost, SocialNetwork, EditorialLine, MediaType, ChannelType, Client, Company, ResponsibilityType } from "@/types/calendar";
+import { postFormSchema, sanitizeInput } from "@/lib/validation";
+import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
   DialogContent,
@@ -38,6 +40,8 @@ const mediaTypes: MediaType[] = ['Imagem', 'Vídeo', 'Carrossel', 'Texto blog'];
 const channelTypes: ChannelType[] = ['Feed', 'Story', 'Feed e Story', 'Site'];
 
 export function PostForm({ isOpen, onClose, onSave, initialData, clients, defaultClientId, defaultCompanyId }: PostFormProps) {
+  const { toast } = useToast();
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
     day: initialData?.day || 1,
     month: initialData?.month || 9, // October (0-indexed)
@@ -58,21 +62,57 @@ export function PostForm({ isOpen, onClose, onSave, initialData, clients, defaul
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setValidationErrors({});
     
-    if (!formData.mediaType || !formData.editorialLine || !formData.subject || !formData.content || !formData.clientId || !formData.companyId) {
-      return;
-    }
+    try {
+      // Sanitize input data
+      const sanitizedData = {
+        title: sanitizeInput(formData.subject), // Using subject as title for validation
+        content: sanitizeInput(formData.content),
+        subject: sanitizeInput(formData.subject),
+        insight: formData.insight ? sanitizeInput(formData.insight) : undefined,
+        day: formData.day,
+        clientId: formData.clientId,
+        companyId: formData.companyId,
+        mediaType: formData.mediaType as 'Imagem' | 'Vídeo' | 'Carrossel' | 'Texto blog',
+        editorialLine: formData.editorialLine as 'SAZONAL' | 'INSTITUCIONAL' | 'BLOG' | 'ROTEIRO',
+        responsibility: formData.responsibility as 'Agência' | 'Cliente',
+        networks: formData.networks as string[],
+        channels: formData.channels as string[],
+      };
 
-    onSave({
-      ...formData,
-      networks: formData.networks as SocialNetwork[],
-      channels: formData.channels as ChannelType[],
-      mediaType: formData.mediaType as MediaType,
-      editorialLine: formData.editorialLine as EditorialLine,
-      responsibility: formData.responsibility as ResponsibilityType,
-    });
-    
-    handleClose();
+      // Validate with Zod schema
+      const validatedData = postFormSchema.parse(sanitizedData);
+
+      onSave({
+        ...formData,
+        subject: validatedData.subject,
+        content: validatedData.content,
+        insight: validatedData.insight || '',
+        networks: formData.networks as SocialNetwork[],
+        channels: formData.channels as ChannelType[],
+        mediaType: formData.mediaType as MediaType,
+        editorialLine: formData.editorialLine as EditorialLine,
+        responsibility: formData.responsibility as ResponsibilityType,
+      });
+      
+      handleClose();
+    } catch (err: any) {
+      if (err.errors) {
+        // Zod validation errors
+        const newErrors: Record<string, string> = {};
+        err.errors.forEach((error: any) => {
+          newErrors[error.path[0]] = error.message;
+        });
+        setValidationErrors(newErrors);
+        
+        toast({
+          title: 'Erro de validação',
+          description: 'Por favor, corrija os campos destacados.',
+          variant: 'destructive',
+        });
+      }
+    }
   };
 
   const handleClose = () => {
@@ -302,7 +342,11 @@ export function PostForm({ isOpen, onClose, onSave, initialData, clients, defaul
               onChange={(e) => setFormData(prev => ({ ...prev, subject: e.target.value }))}
               placeholder="Digite o assunto da postagem..."
               required
+              maxLength={100}
             />
+            {validationErrors.subject && (
+              <p className="text-sm text-destructive">{validationErrors.subject}</p>
+            )}
           </div>
 
           {/* Content */}
@@ -315,7 +359,11 @@ export function PostForm({ isOpen, onClose, onSave, initialData, clients, defaul
               placeholder="Digite o conteúdo da postagem..."
               rows={6}
               required
+              maxLength={5000}
             />
+            {validationErrors.content && (
+              <p className="text-sm text-destructive">{validationErrors.content}</p>
+            )}
           </div>
 
           {/* Insight */}
@@ -327,7 +375,11 @@ export function PostForm({ isOpen, onClose, onSave, initialData, clients, defaul
               onChange={(e) => setFormData(prev => ({ ...prev, insight: e.target.value }))}
               placeholder="Digite insights ou observações especiais..."
               rows={4}
+              maxLength={1000}
             />
+            {validationErrors.insight && (
+              <p className="text-sm text-destructive">{validationErrors.insight}</p>
+            )}
           </div>
 
           {/* Actions */}

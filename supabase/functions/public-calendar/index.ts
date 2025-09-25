@@ -196,9 +196,10 @@ const handler = async (req: Request): Promise<Response> => {
 
   } catch (error) {
     console.error('Error in public-calendar function:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     return new Response(JSON.stringify({ 
       error: 'Internal server error',
-      details: error.message 
+      details: errorMessage 
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
