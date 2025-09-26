@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -14,8 +14,21 @@ interface CalendarViewProps {
 }
 
 export function CalendarView({ posts, onPostClick, onCreatePost, canEdit }: CalendarViewProps) {
-  // Initialize with October 2024 to show the posts
-  const [currentDate, setCurrentDate] = useState(new Date(2024, 9, 1)); // October 2024
+  // Initialize with current date to show the posts
+  const [currentDate, setCurrentDate] = useState(() => {
+    return new Date(); // Current date
+  });
+
+  // Update current date when posts change to show the first post's month
+  useEffect(() => {
+    if (posts.length > 0) {
+      const firstPost = posts.find(p => p.publish_at);
+      if (firstPost?.publish_at) {
+        const date = new Date(firstPost.publish_at);
+        setCurrentDate(new Date(date.getFullYear(), date.getMonth(), 1));
+      }
+    }
+  }, [posts]);
   
   const currentMonth = currentDate.getMonth();
   const currentYear = currentDate.getFullYear();
@@ -161,15 +174,22 @@ export function CalendarView({ posts, onPostClick, onCreatePost, canEdit }: Cale
                         {post.title}
                       </div>
                     </div>
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1 flex-wrap">
                       {(post as any).channel && (
                         <span className="text-xs" title={`Canal: ${(post as any).channel.name}`}>
                           {getChannelIcon((post as any).channel.key)}
                         </span>
                       )}
-                      <Badge variant="outline" className="text-xs px-1 py-0">
-                        Post
-                      </Badge>
+                      {post.responsibility && (
+                        <Badge variant="secondary" className="text-xs px-1 py-0">
+                          {post.responsibility === 'client' ? 'Cliente' : 'Agência'}
+                        </Badge>
+                      )}
+                      {(post as any).client && (
+                        <span className="text-xs text-muted-foreground truncate" title={`Cliente: ${(post as any).client.name}`}>
+                          {(post as any).client.name}
+                        </span>
+                      )}
                     </div>
                   </div>
                 ))}

@@ -29,6 +29,8 @@ export function usePosts(options: UsePostsOptions = {}) {
           *,
           campaign:campaigns(*),
           channel:channels(*),
+          client:clients(*),
+          company:companies(*),
           assets(*),
           approvals(*)
         `)
@@ -96,6 +98,8 @@ export function usePosts(options: UsePostsOptions = {}) {
           *,
           campaign:campaigns(*),
           channel:channels(*),
+          client:clients(*),
+          company:companies(*),
           assets(*),
           approvals(*)
         `)
@@ -133,6 +137,8 @@ export function usePosts(options: UsePostsOptions = {}) {
           *,
           campaign:campaigns(*),
           channel:channels(*),
+          client:clients(*),
+          company:companies(*),
           assets(*),
           approvals(*)
         `)

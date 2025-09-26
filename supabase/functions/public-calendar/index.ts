@@ -143,10 +143,10 @@ const handler = async (req: Request): Promise<Response> => {
         .from('posts')
         .select(`
           *,
-          clients!inner(id, name),
-          companies(id, name, color),
-          channels(id, name, key),
-          campaigns(id, name)
+          client:clients(id, name),
+          company:companies(id, name, color),
+          channel:channels(id, name, key),
+          campaign:campaigns(id, name)
         `)
         .eq('org_id', orgId)
         .order('publish_at', { ascending: true });
