@@ -25,6 +25,18 @@ const navigation = [
     description: 'Gerenciar todas as organizações'
   },
   {
+    name: 'Empresas',
+    href: '/admin/companies',
+    icon: Building2,
+    description: 'Gerenciar empresas por cliente'
+  },
+  {
+    name: 'Canais',
+    href: '/admin/channels',
+    icon: Settings,
+    description: 'Gerenciar canais de mídia (Instagram, TikTok, etc.)'
+  },
+  {
     name: 'Logs de Auditoria',
     href: '/admin/audit',
     icon: History,

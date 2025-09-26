@@ -17,6 +17,8 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminOrgs from "./pages/admin/AdminOrgs";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminAudit from "./pages/admin/AdminAudit";
+import AdminCompanies from "./pages/admin/AdminCompanies";
+import AdminChannels from "./pages/admin/AdminChannels";
 
 // Client Portal Pages
 import ClientCalendar from "./pages/client/ClientCalendar";
@@ -59,6 +61,18 @@ const App = () => (
             <Route path="/admin/audit" element={
               <ProtectedRoute>
                 <AdminAudit />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/companies" element={
+              <ProtectedRoute>
+                {/** Gestão de empresas por cliente */}
+                {/** ... keep existing code (other admin routes) */}
+                <AdminCompanies />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/channels" element={
+              <ProtectedRoute>
+                <AdminChannels />
               </ProtectedRoute>
             } />
             

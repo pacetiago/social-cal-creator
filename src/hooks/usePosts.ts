@@ -85,9 +85,13 @@ export function usePosts(options: UsePostsOptions = {}) {
         return { data: null, error: message };
       }
 
+      // Remover campos não suportados pela tabela `posts` (ex.: channel_ids) e garantir org_id
+      const { channel_ids: _omitChannelIds, org_id: _omitOrgId, ...rest } = postData as any;
+      const insertPayload = { ...rest, org_id: options.orgId };
+
       const { data, error: insertError } = await supabase
         .from('posts')
-        .insert([{ ...postData, org_id: options.orgId }])
+        .insert([insertPayload])
         .select(`
           *,
           campaign:campaigns(*),
@@ -109,6 +113,7 @@ export function usePosts(options: UsePostsOptions = {}) {
       return { data, error: null };
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to create post';
+      console.error('Add post error:', err);
       toast({
         title: 'Erro ao criar post',
         description: message,
