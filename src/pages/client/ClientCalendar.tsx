@@ -43,7 +43,7 @@ export default function ClientCalendar() {
   });
 
   // Private calendar data (authenticated users)
-  const { posts: privatePosts, loading: postsLoading, addPost, updatePost } = usePosts({
+  const { posts: privatePosts, loading: postsLoading, addPost, updatePost, deletePost } = usePosts({
     orgId: organization?.id,
     clientId: selectedClient || undefined,
     companyId: selectedCompany || undefined,
@@ -139,6 +139,12 @@ export default function ClientCalendar() {
     } else {
       await addPost(postData);
     }
+    setShowPostForm(false);
+  };
+
+  const handleDeletePost = async (postId: string) => {
+    await deletePost(postId);
+    setShowPostForm(false);
   };
 
   const handleGenerateLink = async () => {
@@ -355,6 +361,7 @@ export default function ClientCalendar() {
             defaultDate={defaultDate}
             orgId={organization?.id}
             clients={clients}
+            onDelete={handleDeletePost}
           />
         )}
       </main>

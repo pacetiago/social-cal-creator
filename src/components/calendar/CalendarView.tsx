@@ -93,10 +93,13 @@ export function CalendarView({ posts, onPostClick, onCreatePost, canEdit }: Cale
       case 'instagram': return '📷';
       case 'facebook': return '📘';
       case 'linkedin': return '💼';
-      case 'twitter': return '🐦';
+      case 'x': case 'twitter': return '🐦';
       case 'youtube': return '📺';
       case 'tiktok': return '🎵';
-      case 'whatsapp': return '💬';
+      case 'blog': return '📝';
+      case 'ebook': return '📖';
+      case 'roteiro': return '🎬';
+      case 'outros': return '📱';
       default: return '📱';
     }
   };

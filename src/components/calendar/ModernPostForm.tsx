@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,10 +8,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Post, Channel, Campaign, PostStatus } from '@/types/multi-tenant';
 import { useClients, Client } from '@/hooks/useClients';
 import { useCompanies, Company } from '@/hooks/useCompanies';
-import { CalendarIcon, Save, X } from 'lucide-react';
+import { usePosts } from '@/hooks/usePosts';
+import { CalendarIcon, Save, X, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -25,6 +27,7 @@ interface ModernPostFormProps {
   defaultDate?: Date;
   orgId?: string;
   clients?: Client[];
+  onDelete?: (postId: string) => Promise<void>;
 }
 
 export function ModernPostForm({ 
@@ -36,29 +39,73 @@ export function ModernPostForm({
   campaigns,
   defaultDate,
   orgId,
-  clients: clientsProp
+  clients: clientsProp,
+  onDelete
 }: ModernPostFormProps) {
   const clientsHook = useClients(orgId);
   const clients: Client[] = (clientsProp ?? clientsHook.clients);
   const clientsLoading = clientsProp ? false : clientsHook.loading;
   const clientsError = clientsProp ? null : clientsHook.error;
-  const [selectedClientId, setSelectedClientId] = useState(initialData?.client_id || '');
+  const [selectedClientId, setSelectedClientId] = useState('');
   const { companies, loading: companiesLoading } = useCompanies(selectedClientId || undefined);
+  const { deletePost } = usePosts({ orgId });
+  
   const [formData, setFormData] = useState({
-    title: initialData?.title || '',
-    content: initialData?.content || '',
-    status: (initialData?.status || 'idea') as PostStatus,
-    channel_ids: initialData?.channel_ids || [initialData?.channel_id].filter(Boolean) || [],
-    campaign_id: initialData?.campaign_id || '',
-    client_id: initialData?.client_id || '',
-    company_id: initialData?.company_id || '',
-    publish_at: initialData?.publish_at ? new Date(initialData.publish_at) : defaultDate || null,
-    theme: initialData?.theme || '',
-    persona: initialData?.persona || '',
-    insights: initialData?.insights || '',
-    responsibility: initialData?.responsibility || 'agency'
+    title: '',
+    content: '',
+    status: 'idea' as PostStatus,
+    channel_ids: [] as string[],
+    campaign_id: '',
+    client_id: '',
+    company_id: '',
+    publish_at: null as Date | null,
+    theme: '',
+    persona: '',
+    insights: '',
+    responsibility: 'agency' as 'agency' | 'client'
   });
   const [loading, setLoading] = useState(false);
+
+  // Initialize form data when modal opens or initialData changes
+  useEffect(() => {
+    if (isOpen) {
+      if (initialData) {
+        // Editing existing post
+        setFormData({
+          title: initialData.title || '',
+          content: initialData.content || '',
+          status: (initialData.status || 'idea') as PostStatus,
+          channel_ids: initialData.channel_ids || [initialData.channel_id].filter(Boolean) || [],
+          campaign_id: initialData.campaign_id || '',
+          client_id: initialData.client_id || '',
+          company_id: initialData.company_id || '',
+          publish_at: initialData.publish_at ? new Date(initialData.publish_at) : null,
+          theme: initialData.theme || '',
+          persona: initialData.persona || '',
+          insights: initialData.insights || '',
+          responsibility: initialData.responsibility || 'agency'
+        });
+        setSelectedClientId(initialData.client_id || '');
+      } else {
+        // Creating new post
+        setFormData({
+          title: '',
+          content: '',
+          status: 'idea',
+          channel_ids: [],
+          campaign_id: '',
+          client_id: '',
+          company_id: '',
+          publish_at: defaultDate || null,
+          theme: '',
+          persona: '',
+          insights: '',
+          responsibility: 'agency'
+        });
+        setSelectedClientId('');
+      }
+    }
+  }, [isOpen, initialData, defaultDate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,22 +148,23 @@ export function ModernPostForm({
   };
 
   const handleClose = () => {
-    setFormData({
-      title: '',
-      content: '',
-      status: 'idea',
-      channel_ids: [],
-      campaign_id: '',
-      client_id: '',
-      company_id: '',
-      publish_at: null,
-      theme: '',
-      persona: '',
-      insights: '',
-      responsibility: 'agency'
-    });
-    setSelectedClientId('');
     onClose();
+  };
+
+  const handleDelete = async () => {
+    if (!initialData?.id) return;
+    
+    setLoading(true);
+    try {
+      if (onDelete) {
+        await onDelete(initialData.id);
+      } else {
+        await deletePost(initialData.id);
+      }
+      handleClose();
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -358,7 +406,34 @@ export function ModernPostForm({
               <Save className="h-4 w-4 mr-2" />
               {loading ? 'Salvando...' : 'Salvar Post'}
             </Button>
-            <Button type="button" variant="outline" onClick={handleClose} className="flex-1">
+            {initialData && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button type="button" variant="destructive" disabled={loading}>
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Excluir
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Tem certeza que deseja excluir este post? Esta ação não pode ser desfeita.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleDelete}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      Excluir
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+            <Button type="button" variant="outline" onClick={handleClose}>
               <X className="h-4 w-4 mr-2" />
               Cancelar
             </Button>
