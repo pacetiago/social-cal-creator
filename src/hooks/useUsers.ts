@@ -24,7 +24,7 @@ export function useUsers() {
       const { data, error: fetchError } = await supabase
         .from('profiles')
         .select('*')
-        .order('full_name');
+        .order('created_at', { ascending: false });
 
       if (fetchError) throw fetchError;
 

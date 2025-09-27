@@ -28,6 +28,7 @@ import ClientCampaigns from "./pages/client/ClientCampaigns";
 import ClientLibrary from "./pages/client/ClientLibrary";
 import ClientSettings from "./pages/client/ClientSettings";
 import ClientExports from "./pages/client/ClientExports";
+import SelectOrganization from "./pages/SelectOrganization";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +42,11 @@ const App = () => (
           <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route path="/" element={<Index />} />
+            <Route path="/select-org" element={
+              <ProtectedRoute>
+                <SelectOrganization />
+              </ProtectedRoute>
+            } />
             
             {/* Admin Routes */}
             <Route path="/admin" element={

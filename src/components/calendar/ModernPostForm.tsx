@@ -70,12 +70,19 @@ export function ModernPostForm({
   useEffect(() => {
     if (isOpen) {
       if (initialData) {
-        // Editing existing post
+        // Editing existing post - fix channel_ids loading
+        let channelIds: string[] = [];
+        if (initialData.channel_ids && Array.isArray(initialData.channel_ids) && initialData.channel_ids.length > 0) {
+          channelIds = initialData.channel_ids;
+        } else if (initialData.channel_id) {
+          channelIds = [initialData.channel_id];
+        }
+        
         setFormData({
           title: initialData.title || '',
           content: initialData.content || '',
           status: (initialData.status || 'idea') as PostStatus,
-          channel_ids: initialData.channel_ids || [initialData.channel_id].filter(Boolean) || [],
+          channel_ids: channelIds,
           campaign_id: initialData.campaign_id || '',
           client_id: initialData.client_id || '',
           company_id: initialData.company_id || '',
@@ -326,30 +333,48 @@ export function ModernPostForm({
             <div>
               <Label htmlFor="channels">Canais (múltipla seleção)</Label>
               <div className="space-y-2 max-h-32 overflow-y-auto border rounded-md p-3">
-                {channels.map((channel) => (
-                  <div key={channel.id} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`channel-${channel.id}`}
-                      checked={formData.channel_ids.includes(channel.id)}
-                      onCheckedChange={(checked) => {
-                        if (checked) {
-                          setFormData(prev => ({
-                            ...prev,
-                            channel_ids: [...prev.channel_ids, channel.id]
-                          }));
-                        } else {
-                          setFormData(prev => ({
-                            ...prev,
-                            channel_ids: prev.channel_ids.filter(id => id !== channel.id)
-                          }));
-                        }
-                      }}
-                    />
-                    <Label htmlFor={`channel-${channel.id}`} className="text-sm font-normal">
-                      {channel.name}
-                    </Label>
-                  </div>
-                ))}
+                {channels.map((channel) => {
+                  const getChannelIcon = (key: string) => {
+                    switch (key?.toLowerCase()) {
+                      case 'instagram': return '📷';
+                      case 'facebook': return '👥';
+                      case 'linkedin': return '💼';
+                      case 'tiktok': return '🎵';
+                      case 'youtube': return '🎥';
+                      case 'blog': return '📝';
+                      case 'ebook': return '📖';
+                      case 'x': return '🐦';
+                      case 'roteiro': return '🎬';
+                      default: return '📢';
+                    }
+                  };
+                  
+                  return (
+                    <div key={channel.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`channel-${channel.id}`}
+                        checked={formData.channel_ids.includes(channel.id)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setFormData(prev => ({
+                              ...prev,
+                              channel_ids: [...prev.channel_ids, channel.id]
+                            }));
+                          } else {
+                            setFormData(prev => ({
+                              ...prev,
+                              channel_ids: prev.channel_ids.filter(id => id !== channel.id)
+                            }));
+                          }
+                        }}
+                      />
+                      <Label htmlFor={`channel-${channel.id}`} className="text-sm font-normal flex items-center gap-2">
+                        <span>{getChannelIcon(channel.key)}</span>
+                        {channel.name}
+                      </Label>
+                    </div>
+                  );
+                })}
                 {channels.length === 0 && (
                   <p className="text-sm text-muted-foreground">Nenhum canal disponível</p>
                 )}

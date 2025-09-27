@@ -20,8 +20,11 @@ export default function Index() {
       }
       
       // Check if user has access to any organization
-      if (userOrganizations.length > 0) {
-        // Redirect to first organization calendar
+      if (userOrganizations.length > 1) {
+        // Multiple organizations - let user choose
+        navigate('/select-org');
+      } else if (userOrganizations.length === 1) {
+        // Single organization - redirect directly
         navigate(`/c/${userOrganizations[0].slug}`);
       } else {
         // User has no organizations, show create org screen
