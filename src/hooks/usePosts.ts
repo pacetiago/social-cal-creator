@@ -87,7 +87,7 @@ export function usePosts(options: UsePostsOptions = {}) {
         return { data: null, error: message };
       }
 
-      // Remover campos não suportados pela tabela `posts` (ex.: channel_ids) e garantir org_id
+      // Remover campos não suportados pela tabela `posts` e garantir org_id
       const { channel_ids: _omitChannelIds, org_id: _omitOrgId, ...rest } = postData as any;
       const insertPayload = { ...rest, org_id: options.orgId };
 
@@ -129,9 +129,12 @@ export function usePosts(options: UsePostsOptions = {}) {
 
   const updatePost = async (id: string, updates: Partial<Post>) => {
     try {
+      // Remover campos não suportados pela tabela posts
+      const { channel_ids: _omitChannelIds, org_id: _omitOrgId, ...cleanUpdates } = updates as any;
+      
       const { data, error: updateError } = await supabase
         .from('posts')
-        .update(updates)
+        .update(cleanUpdates)
         .eq('id', id)
         .select(`
           *,

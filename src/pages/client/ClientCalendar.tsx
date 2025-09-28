@@ -10,11 +10,12 @@ import { useShareToken } from '@/hooks/useShareToken';
 import { CalendarView } from '@/components/calendar/CalendarView';
 import { ModernPostForm } from '@/components/calendar/ModernPostForm';
 import { ClientFilters } from '@/components/calendar/ClientFilters';
+import { PostSelection } from '@/components/posts/PostSelection';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Calendar, Grid, List, Plus, Filter, Share2 } from 'lucide-react';
+import { Calendar, Grid, List, Plus, Filter, Share2, CheckSquare } from 'lucide-react';
 import { PostStatus, Post } from '@/types/multi-tenant';
 
 export default function ClientCalendar() {
@@ -67,6 +68,7 @@ export default function ClientCalendar() {
   const [view, setView] = useState<'calendar' | 'list'>('calendar');
   const [showPostForm, setShowPostForm] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [showSelection, setShowSelection] = useState(false);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [defaultDate, setDefaultDate] = useState<Date | undefined>();
 
@@ -151,6 +153,20 @@ export default function ClientCalendar() {
     await generatePublicLink();
   };
 
+  const handleBulkDelete = async (postIds: string[]) => {
+    for (const postId of postIds) {
+      await deletePost(postId);
+    }
+    setShowSelection(false);
+  };
+
+  const handleBulkApprove = async (postIds: string[]) => {
+    for (const postId of postIds) {
+      await updatePost(postId, { status: 'approved' as PostStatus });
+    }
+    setShowSelection(false);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b">
@@ -183,6 +199,12 @@ export default function ClientCalendar() {
                 <Filter className="h-4 w-4 mr-2" />
                 Filtros
               </Button>
+              {!isPublicView && canEdit && (
+                <Button variant="outline" size="sm" onClick={() => setShowSelection(!showSelection)}>
+                  <CheckSquare className="h-4 w-4 mr-2" />
+                  Seleção em Massa
+                </Button>
+              )}
               {!isPublicView && (
                 <Button 
                   variant="outline" 
@@ -263,7 +285,24 @@ export default function ClientCalendar() {
             </div>
 
         {/* Calendar/List Content */}
-            {view === 'list' ? (
+            {showSelection ? (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Seleção em Massa</CardTitle>
+                  <CardDescription>
+                    Selecione posts para ações em massa como aprovação ou exclusão
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <PostSelection
+                    posts={posts}
+                    onBulkDelete={handleBulkDelete}
+                    onBulkApprove={handleBulkApprove}
+                    onCancel={() => setShowSelection(false)}
+                  />
+                </CardContent>
+              </Card>
+            ) : view === 'list' ? (
               <Card>
                 <CardHeader>
                   <CardTitle>Lista de Posts</CardTitle>
@@ -325,6 +364,7 @@ export default function ClientCalendar() {
                 onPostClick={handlePostClick}
                 onCreatePost={!isPublicView && canEdit ? handleCreatePost : undefined}
                 canEdit={!isPublicView && canEdit}
+                channels={channels}
               />
             )}
           </div>

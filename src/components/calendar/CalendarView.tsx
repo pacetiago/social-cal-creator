@@ -11,9 +11,10 @@ interface CalendarViewProps {
   onPostClick: (post: Post) => void;
   onCreatePost?: (date: Date) => void;
   canEdit?: boolean;
+  channels?: any[];
 }
 
-export function CalendarView({ posts, onPostClick, onCreatePost, canEdit }: CalendarViewProps) {
+export function CalendarView({ posts, onPostClick, onCreatePost, canEdit, channels }: CalendarViewProps) {
   // Initialize with current date to show the posts
   const [currentDate, setCurrentDate] = useState(() => {
     return new Date(); // Current date
@@ -182,6 +183,22 @@ export function CalendarView({ posts, onPostClick, onCreatePost, canEdit }: Cale
                         <span className="text-xs" title={`Canal: ${(post as any).channel.name}`}>
                           {getChannelIcon((post as any).channel.key)}
                         </span>
+                      )}
+                      {(post as any).channel_ids && Array.isArray((post as any).channel_ids) && (post as any).channel_ids.length > 0 && (
+                        <div className="flex gap-1">
+                          {(post as any).channel_ids.slice(0, 3).map((channelId: string, idx: number) => {
+                            const channel = channels?.find(c => c.id === channelId);
+                            if (!channel) return null;
+                            return (
+                              <span key={idx} className="text-xs" title={`Canal: ${channel.name}`}>
+                                {getChannelIcon(channel.key)}
+                              </span>
+                            );
+                          })}
+                          {(post as any).channel_ids.length > 3 && (
+                            <span className="text-xs text-muted-foreground">+{(post as any).channel_ids.length - 3}</span>
+                          )}
+                        </div>
                       )}
                       {post.responsibility && (
                         <Badge variant="secondary" className="text-xs px-1 py-0">
