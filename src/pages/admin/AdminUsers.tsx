@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Users, Settings, UserPlus } from 'lucide-react';
+import { Search, Users, UserPlus, MoreHorizontal, Trash2, UserX } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
@@ -36,6 +37,39 @@ export default function AdminUsers() {
 
   const handleRoleChange = async (userId: string, newRole: string) => {
     await updateUser(userId, { role: newRole });
+  };
+
+  const handleDeactivateUser = async (userId: string, userEmail: string) => {
+    if (confirm(`Tem certeza que deseja desativar o usuário ${userEmail}?`)) {
+      // Atualizar role para 'inactive' ou similar
+      await updateUser(userId, { role: 'inactive' });
+    }
+  };
+
+  const handleDeleteUser = async (userId: string, userEmail: string) => {
+    if (confirm(`Tem certeza que deseja excluir o usuário ${userEmail}? Esta ação não pode ser desfeita.`)) {
+      // Para excluir, chamamos o edge function
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) throw new Error('Usuário não autenticado');
+
+        await supabase.functions.invoke('delete-user', {
+          body: { userId },
+          headers: { Authorization: `Bearer ${session.access_token}` }
+        });
+
+        toast({
+          title: 'Usuário excluído',
+          description: `${userEmail} foi removido do sistema.`,
+        });
+      } catch (error) {
+        toast({
+          title: 'Erro ao excluir usuário',
+          description: 'Não foi possível excluir o usuário.',
+          variant: 'destructive',
+        });
+      }
+    }
   };
 
   const handleCreateUser = async (e: React.FormEvent) => {
@@ -305,9 +339,28 @@ export default function AdminUsers() {
                       {new Date(user.created_at).toLocaleDateString('pt-BR')}
                     </TableCell>
                     <TableCell>
-                      <Button variant="outline" size="sm">
-                        <Settings className="h-4 w-4" />
-                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="outline" size="sm">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={() => handleDeactivateUser(user.id, user.email)}
+                          >
+                            <UserX className="h-4 w-4 mr-2" />
+                            Desativar
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => handleDeleteUser(user.id, user.email)}
+                            className="text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Excluir
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 ))}

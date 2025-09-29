@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Search, Plus, Users, Pencil } from 'lucide-react';
+import { Search, Plus, Users, Pencil, MoreHorizontal, Trash2, Power, PowerOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 import { AdminLayout } from '@/components/AdminLayout';
 import { useOrganizations } from '@/hooks/useOrganizations';
@@ -13,7 +14,7 @@ import { OrganizationForm } from '@/components/admin/OrganizationForm';
 import { MembersModal } from '@/components/admin/MembersModal';
 
 export default function AdminOrgs() {
-  const { organizations, loading, addOrganization, updateOrganization } = useOrganizations();
+  const { organizations, loading, addOrganization, updateOrganization, deleteOrganization } = useOrganizations();
   const [searchTerm, setSearchTerm] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [showMembers, setShowMembers] = useState(false);
@@ -52,6 +53,17 @@ export default function AdminOrgs() {
       setEditingOrg(null);
     }
     return result;
+  };
+
+  const handleToggleStatus = async (orgId: string, currentStatus: string) => {
+    const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+    await updateOrganization(orgId, { status: newStatus });
+  };
+
+  const handleDeleteOrg = async (orgId: string) => {
+    if (confirm('Tem certeza que deseja excluir esta organização? Esta ação não pode ser desfeita.')) {
+      await deleteOrganization(orgId);
+    }
   };
 
   if (loading) {
@@ -177,6 +189,37 @@ export default function AdminOrgs() {
                         <Pencil className="h-4 w-4 mr-1" />
                         Editar
                       </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="outline" size="sm">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={() => handleToggleStatus(org.id, org.status)}
+                          >
+                            {org.status === 'active' ? (
+                              <>
+                                <PowerOff className="h-4 w-4 mr-2" />
+                                Desativar
+                              </>
+                            ) : (
+                              <>
+                                <Power className="h-4 w-4 mr-2" />
+                                Ativar
+                              </>
+                            )}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => handleDeleteOrg(org.id)}
+                            className="text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Excluir
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 ))}

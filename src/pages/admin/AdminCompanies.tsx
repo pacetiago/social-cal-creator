@@ -8,7 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Save, Trash2, Building2 } from 'lucide-react';
+import { Plus, Save, Trash2, Building2, MoreHorizontal, Power } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 export default function AdminCompanies() {
   const { organizations } = useOrganizations();
@@ -35,6 +36,12 @@ export default function AdminCompanies() {
     if (!data) return;
     await updateCompany(id, { name: data.name, color: data.color });
     setEditing(prev => { const { [id]: _, ...rest } = prev; return rest; });
+  };
+
+  const handleActivateCompany = async (companyId: string, companyName: string) => {
+    if (confirm(`Tem certeza que deseja reativar a empresa ${companyName}?`)) {
+      await updateCompany(companyId, { is_active: true });
+    }
   };
 
   return (
@@ -138,9 +145,30 @@ export default function AdminCompanies() {
                         ) : (
                           <Button size="sm" variant="outline" onClick={() => startEdit(comp.id, comp.name, comp.color)}>Editar</Button>
                         )}
-                        <Button size="sm" variant="destructive" onClick={() => deleteCompany(comp.id)}>
-                          <Trash2 className="h-4 w-4 mr-1" /> Desativar
-                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="outline" size="sm">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            {!comp.is_active && (
+                              <DropdownMenuItem
+                                onClick={() => handleActivateCompany(comp.id, comp.name)}
+                              >
+                                <Power className="h-4 w-4 mr-2" />
+                                Ativar
+                              </DropdownMenuItem>
+                            )}
+                            <DropdownMenuItem
+                              onClick={() => deleteCompany(comp.id)}
+                              className="text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              {comp.is_active ? 'Desativar' : 'Excluir'}
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </TableCell>
                     </TableRow>
                   );

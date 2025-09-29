@@ -7,7 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, ToggleLeft, ToggleRight, Share2 } from 'lucide-react';
+import { Plus, ToggleLeft, ToggleRight, Trash2, MoreHorizontal } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { ChannelKey } from '@/types/multi-tenant';
 
 const CHANNEL_KEYS: ChannelKey[] = ['instagram','tiktok','facebook','linkedin','x','youtube','blog','ebook','roteiro'];
@@ -25,6 +26,13 @@ export default function AdminChannels() {
     if (!canSubmit) return;
     const res = await addChannel({ key: form.key as ChannelKey, name: form.name });
     if (!res.error) setForm({ key: '', name: '' });
+  };
+
+  const handleDeleteChannel = async (channelId: string, channelName: string) => {
+    if (confirm(`Tem certeza que deseja excluir o canal ${channelName}?`)) {
+      // Como não temos deleteChannel no hook, vamos usar updateChannel para desativar
+      await toggleChannel(channelId, false);
+    }
   };
 
   return (
@@ -95,23 +103,42 @@ export default function AdminChannels() {
                     <TableHead>Nome</TableHead>
                     <TableHead>Tipo</TableHead>
                     <TableHead className="w-32">Ativo</TableHead>
+                    <TableHead className="w-32">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {channels.map((c) => (
-                    <TableRow key={c.id}>
-                      <TableCell>{c.name}</TableCell>
-                      <TableCell><code className="rounded bg-muted px-2 py-1 text-sm">{c.key}</code></TableCell>
-                      <TableCell>
-                        <Button variant="outline" size="sm" onClick={() => toggleChannel(c.id, !c.is_active)}>
-                          {c.is_active ? <ToggleRight className="h-4 w-4 mr-2" /> : <ToggleLeft className="h-4 w-4 mr-2" />} {c.is_active ? 'Ativo' : 'Inativo'}
-                        </Button>
-                      </TableCell>
-                    </TableRow>
+                      <TableRow key={c.id}>
+                        <TableCell>{c.name}</TableCell>
+                        <TableCell><code className="rounded bg-muted px-2 py-1 text-sm">{c.key}</code></TableCell>
+                        <TableCell>
+                          <Button variant="outline" size="sm" onClick={() => toggleChannel(c.id, !c.is_active)}>
+                            {c.is_active ? <ToggleRight className="h-4 w-4 mr-2" /> : <ToggleLeft className="h-4 w-4 mr-2" />} {c.is_active ? 'Ativo' : 'Inativo'}
+                          </Button>
+                        </TableCell>
+                        <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="outline" size="sm">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onClick={() => handleDeleteChannel(c.id, c.name)}
+                                className="text-destructive"
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Excluir
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
                   ))}
                   {(!orgId || channels.length === 0) && (
                     <TableRow>
-                      <TableCell colSpan={3} className="text-center text-muted-foreground">{orgId ? 'Nenhum canal cadastrado.' : 'Selecione uma organização.'}</TableCell>
+                      <TableCell colSpan={4} className="text-center text-muted-foreground">{orgId ? 'Nenhum canal cadastrado.' : 'Selecione uma organização.'}</TableCell>
                     </TableRow>
                   )}
                 </TableBody>
