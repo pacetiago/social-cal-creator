@@ -41,22 +41,49 @@ export default function AdminUsers() {
 
   const handleDeactivateUser = async (userId: string, userEmail: string) => {
     if (confirm(`Tem certeza que deseja desativar o usuário ${userEmail}?`)) {
-      // Atualizar role para 'inactive' ou similar
-      await updateUser(userId, { role: 'inactive' });
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) throw new Error('Usuário não autenticado');
+
+        const { error } = await supabase.functions.invoke('update-user-role', {
+          body: { userId, role: 'inactive' },
+          headers: { Authorization: `Bearer ${session.access_token}` }
+        });
+
+        if (error) throw error;
+
+        // Atualiza localmente o estado
+        await updateUser(userId, { role: 'inactive' });
+
+        toast({
+          title: 'Usuário desativado',
+          description: `${userEmail} foi desativado.`,
+        });
+      } catch (error) {
+        toast({
+          title: 'Erro ao desativar usuário',
+          description: 'Não foi possível desativar o usuário.',
+          variant: 'destructive',
+        });
+      }
     }
   };
 
   const handleDeleteUser = async (userId: string, userEmail: string) => {
     if (confirm(`Tem certeza que deseja excluir o usuário ${userEmail}? Esta ação não pode ser desfeita.`)) {
-      // Para excluir, chamamos o edge function
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) throw new Error('Usuário não autenticado');
 
-        await supabase.functions.invoke('delete-user', {
+        const { error } = await supabase.functions.invoke('delete-user', {
           body: { userId },
           headers: { Authorization: `Bearer ${session.access_token}` }
         });
+
+        if (error) throw error;
+
+        // Remove do estado local
+        window.location.reload(); // Força reload para atualizar a lista
 
         toast({
           title: 'Usuário excluído',

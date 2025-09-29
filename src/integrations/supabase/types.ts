@@ -721,6 +721,10 @@ export type Database = {
         Args: { org_name: string; org_slug: string }
         Returns: string
       }
+      delete_org_cascade: {
+        Args: { target_org_id: string }
+        Returns: undefined
+      }
       generate_share_token: {
         Args: { target_org_id: string }
         Returns: string

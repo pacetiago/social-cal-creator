@@ -54,37 +54,21 @@ serve(async (req) => {
     }
 
     // Get request body
-    const { email, password, fullName, role } = await req.json()
+    const { userId } = await req.json()
 
-    // Create the user using admin client
-    const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
-      email,
-      password,
-      user_metadata: { 
-        full_name: fullName 
-      },
-      email_confirm: false
-    })
-
-    if (createError) {
-      throw createError
+    if (!userId) {
+      throw new Error('User ID is required')
     }
 
-    // Update the user's role in the profiles table
-    if (newUser.user) {
-      const { error: updateError } = await supabaseAdmin
-        .from('profiles')
-        .update({ role })
-        .eq('id', newUser.user.id)
+    // Delete user from auth.users using admin client
+    const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(userId)
 
-      if (updateError) {
-        console.error('Error updating user role:', updateError)
-        // Don't throw here as the user was created successfully
-      }
+    if (deleteError) {
+      throw deleteError
     }
 
     return new Response(
-      JSON.stringify({ user: newUser.user }),
+      JSON.stringify({ success: true }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,

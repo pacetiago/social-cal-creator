@@ -104,10 +104,9 @@ export function useOrganizations() {
 
   const deleteOrganization = async (id: string) => {
     try {
-      const { error: deleteError } = await supabase
-        .from('orgs')
-        .delete()
-        .eq('id', id);
+      const { error: deleteError } = await supabase.rpc('delete_org_cascade', {
+        target_org_id: id
+      });
 
       if (deleteError) throw deleteError;
 
