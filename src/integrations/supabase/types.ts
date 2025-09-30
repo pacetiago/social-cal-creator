@@ -534,6 +534,7 @@ export type Database = {
           created_by: string | null
           id: string
           insights: string | null
+          media_type: Database["public"]["Enums"]["media_type"] | null
           org_id: string
           persona: string | null
           publish_at: string | null
@@ -561,6 +562,7 @@ export type Database = {
           created_by?: string | null
           id?: string
           insights?: string | null
+          media_type?: Database["public"]["Enums"]["media_type"] | null
           org_id: string
           persona?: string | null
           publish_at?: string | null
@@ -588,6 +590,7 @@ export type Database = {
           created_by?: string | null
           id?: string
           insights?: string | null
+          media_type?: Database["public"]["Enums"]["media_type"] | null
           org_id?: string
           persona?: string | null
           publish_at?: string | null
@@ -774,6 +777,7 @@ export type Database = {
         | "approved"
         | "scheduled"
         | "published"
+        | "production"
       responsibility_type: "Agência" | "Cliente"
       social_network: "Facebook" | "Instagram" | "LinkedIn" | "Site"
       user_role: "OWNER" | "ADMIN" | "EDITOR" | "VIEWER"
@@ -928,6 +932,7 @@ export const Constants = {
         "approved",
         "scheduled",
         "published",
+        "production",
       ],
       responsibility_type: ["Agência", "Cliente"],
       social_network: ["Facebook", "Instagram", "LinkedIn", "Site"],
