@@ -17,7 +17,7 @@ import { createUserSchema, sanitizeInput } from '@/lib/validation';
 import type { CreateUserData } from '@/lib/validation';
 
 export default function AdminUsers() {
-  const { users, loading, updateUser } = useUsers();
+  const { users, loading, updateUser, refetch } = useUsers();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [showCreateUser, setShowCreateUser] = useState(false);
@@ -82,8 +82,7 @@ export default function AdminUsers() {
 
         if (error) throw error;
 
-        // Remove do estado local
-        window.location.reload(); // Força reload para atualizar a lista
+        await refetch(); // Recarrega a lista de usuários
 
         toast({
           title: 'Usuário excluído',
@@ -145,6 +144,7 @@ export default function AdminUsers() {
 
       setNewUserData({ email: '', password: '', full_name: '', role: 'user' });
       setShowCreateUser(false);
+      await refetch(); // Recarrega a lista de usuários
     } catch (err: any) {
       if (err.errors) {
         // Zod validation errors

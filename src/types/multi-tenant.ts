@@ -1,5 +1,6 @@
 export type UserRole = 'OWNER' | 'ADMIN' | 'EDITOR' | 'VIEWER';
-export type PostStatus = 'idea' | 'draft' | 'review' | 'approved' | 'scheduled' | 'published';
+export type PostStatus = 'idea' | 'draft' | 'review' | 'approved' | 'scheduled' | 'published' | 'production';
+export type MediaType = 'carousel' | 'static_post' | 'photo' | 'reel' | 'video' | 'story';
 export type ChannelKey = 'instagram' | 'linkedin' | 'x' | 'tiktok' | 'youtube' | 'blog' | 'ebook' | 'facebook' | 'roteiro';
 export type AssetKind = 'image' | 'video' | 'doc';
 export type FilterType = 'theme' | 'persona' | 'tag';
@@ -84,6 +85,7 @@ export interface Post {
   publish_at?: string;
   persona?: string;
   theme?: string;
+  media_type?: MediaType;
   tags?: string[];
   utm_source?: string;
   utm_campaign?: string;
