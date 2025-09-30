@@ -1,5 +1,5 @@
 export type UserRole = 'OWNER' | 'ADMIN' | 'EDITOR' | 'VIEWER';
-export type PostStatus = 'idea' | 'draft' | 'review' | 'approved' | 'scheduled' | 'published' | 'production';
+export type PostStatus = 'idea' | 'draft' | 'review' | 'approved' | 'production' | 'scheduled' | 'published';
 export type MediaType = 'carousel' | 'static_post' | 'photo' | 'reel' | 'video' | 'story';
 export type ChannelKey = 'instagram' | 'linkedin' | 'x' | 'tiktok' | 'youtube' | 'blog' | 'ebook' | 'facebook' | 'roteiro';
 export type AssetKind = 'image' | 'video' | 'doc';

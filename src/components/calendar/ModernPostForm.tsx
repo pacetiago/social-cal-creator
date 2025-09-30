@@ -62,7 +62,8 @@ export function ModernPostForm({
     theme: '',
     persona: '',
     insights: '',
-    responsibility: 'agency' as 'agency' | 'client'
+    responsibility: 'agency' as 'agency' | 'client',
+    media_type: '' as string
   });
   const [loading, setLoading] = useState(false);
 
@@ -90,7 +91,8 @@ export function ModernPostForm({
           theme: initialData.theme || '',
           persona: initialData.persona || '',
           insights: initialData.insights || '',
-          responsibility: initialData.responsibility || 'agency'
+          responsibility: initialData.responsibility || 'agency',
+          media_type: initialData.media_type || ''
         });
         setSelectedClientId(initialData.client_id || '');
       } else {
@@ -107,7 +109,8 @@ export function ModernPostForm({
           theme: '',
           persona: '',
           insights: '',
-          responsibility: 'agency'
+          responsibility: 'agency',
+          media_type: ''
         });
         setSelectedClientId('');
       }
@@ -138,6 +141,7 @@ export function ModernPostForm({
         persona: formData.persona,
         insights: formData.insights,
         responsibility: formData.responsibility,
+        media_type: formData.media_type || null,
         utm_source: null,
         utm_campaign: null,
         utm_content: null,
@@ -296,6 +300,7 @@ export function ModernPostForm({
                   <SelectItem value="draft">Rascunho</SelectItem>
                   <SelectItem value="review">Em Revisão</SelectItem>
                   <SelectItem value="approved">Aprovado</SelectItem>
+                  <SelectItem value="production">Em Produção</SelectItem>
                   <SelectItem value="scheduled">Agendado</SelectItem>
                   <SelectItem value="published">Publicado</SelectItem>
                 </SelectContent>
@@ -382,14 +387,14 @@ export function ModernPostForm({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <Label htmlFor="theme">Tema</Label>
+              <Label htmlFor="theme">Assunto do conteúdo</Label>
               <Input
                 id="theme"
                 value={formData.theme}
                 onChange={(e) => setFormData(prev => ({ ...prev, theme: e.target.value }))}
-                placeholder="Tema do post..."
+                placeholder="Assunto do post..."
               />
             </div>
 
@@ -401,6 +406,26 @@ export function ModernPostForm({
                 onChange={(e) => setFormData(prev => ({ ...prev, persona: e.target.value }))}
                 placeholder="Persona alvo..."
               />
+            </div>
+
+            <div>
+              <Label htmlFor="media_type">Tipo de Mídia</Label>
+              <Select
+                value={formData.media_type}
+                onValueChange={(value) => setFormData(prev => ({ ...prev, media_type: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o tipo..." />
+                </SelectTrigger>
+                <SelectContent className="z-50 bg-popover text-popover-foreground border">
+                  <SelectItem value="carousel">Carrossel</SelectItem>
+                  <SelectItem value="static_post">Post Estático</SelectItem>
+                  <SelectItem value="photo">Post/Fotos</SelectItem>
+                  <SelectItem value="reel">Reels</SelectItem>
+                  <SelectItem value="video">Vídeo</SelectItem>
+                  <SelectItem value="story">Story</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
