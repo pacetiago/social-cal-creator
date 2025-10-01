@@ -68,7 +68,7 @@ export function usePosts(options: UsePostsOptions = {}) {
 
       if (fetchError) throw fetchError;
 
-      setPosts((data || []) as PostWithRelations[]);
+      setPosts((data || []) as any);
       setError(null);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to fetch posts';
@@ -107,7 +107,7 @@ export function usePosts(options: UsePostsOptions = {}) {
 
       if (insertError) throw insertError;
 
-      setPosts(prev => [data as PostWithRelations, ...prev]);
+      setPosts(prev => [data as any, ...prev]);
       
       toast({
         title: 'Post criado',
@@ -149,7 +149,7 @@ export function usePosts(options: UsePostsOptions = {}) {
 
       if (updateError) throw updateError;
 
-      setPosts(prev => prev.map(post => post.id === id ? data as PostWithRelations : post));
+      setPosts(prev => prev.map(post => post.id === id ? data as any : post));
       
       toast({
         title: 'Post atualizado',

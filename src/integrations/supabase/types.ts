@@ -768,7 +768,15 @@ export type Database = {
       channel_type: "Feed" | "Story" | "Feed e Story" | "Site"
       editorial_line: "SAZONAL" | "INSTITUCIONAL" | "BLOG" | "ROTEIRO"
       filter_type: "theme" | "persona" | "tag"
-      media_type: "Imagem" | "Vídeo" | "Carrossel" | "Texto blog"
+      media_type:
+        | "Imagem"
+        | "Vídeo"
+        | "Carrossel"
+        | "Texto blog"
+        | "Post Estático"
+        | "Post/Fotos"
+        | "Reels"
+        | "Story"
       post_responsibility: "client" | "agency"
       post_status:
         | "idea"
@@ -923,7 +931,16 @@ export const Constants = {
       channel_type: ["Feed", "Story", "Feed e Story", "Site"],
       editorial_line: ["SAZONAL", "INSTITUCIONAL", "BLOG", "ROTEIRO"],
       filter_type: ["theme", "persona", "tag"],
-      media_type: ["Imagem", "Vídeo", "Carrossel", "Texto blog"],
+      media_type: [
+        "Imagem",
+        "Vídeo",
+        "Carrossel",
+        "Texto blog",
+        "Post Estático",
+        "Post/Fotos",
+        "Reels",
+        "Story",
+      ],
       post_responsibility: ["client", "agency"],
       post_status: [
         "idea",

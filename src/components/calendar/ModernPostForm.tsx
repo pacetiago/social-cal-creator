@@ -9,7 +9,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Post, Channel, Campaign, PostStatus } from '@/types/multi-tenant';
+import { Post, Channel, Campaign, PostStatus, MediaType } from '@/types/multi-tenant';
 import { useClients, Client } from '@/hooks/useClients';
 import { useCompanies, Company } from '@/hooks/useCompanies';
 import { usePosts } from '@/hooks/usePosts';
@@ -63,7 +63,7 @@ export function ModernPostForm({
     persona: '',
     insights: '',
     responsibility: 'agency' as 'agency' | 'client',
-    media_type: '' as string
+    media_type: '' as MediaType | ''
   });
   const [loading, setLoading] = useState(false);
 
@@ -412,18 +412,20 @@ export function ModernPostForm({
               <Label htmlFor="media_type">Tipo de Mídia</Label>
               <Select
                 value={formData.media_type}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, media_type: value }))}
+                onValueChange={(value) => setFormData(prev => ({ ...prev, media_type: value as MediaType | '' }))}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione o tipo..." />
                 </SelectTrigger>
                 <SelectContent className="z-50 bg-popover text-popover-foreground border">
-                  <SelectItem value="carousel">Carrossel</SelectItem>
-                  <SelectItem value="static_post">Post Estático</SelectItem>
-                  <SelectItem value="photo">Post/Fotos</SelectItem>
-                  <SelectItem value="reel">Reels</SelectItem>
-                  <SelectItem value="video">Vídeo</SelectItem>
-                  <SelectItem value="story">Story</SelectItem>
+                  <SelectItem value="Carrossel">Carrossel</SelectItem>
+                  <SelectItem value="Imagem">Imagem</SelectItem>
+                  <SelectItem value="Texto blog">Texto blog</SelectItem>
+                  <SelectItem value="Vídeo">Vídeo</SelectItem>
+                  <SelectItem value="Post Estático">Post Estático</SelectItem>
+                  <SelectItem value="Post/Fotos">Post/Fotos</SelectItem>
+                  <SelectItem value="Reels">Reels</SelectItem>
+                  <SelectItem value="Story">Story</SelectItem>
                 </SelectContent>
               </Select>
             </div>

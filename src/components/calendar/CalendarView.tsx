@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { Post, PostStatus } from '@/types/multi-tenant';
 import { cn } from '@/lib/utils';
+import { PostsModal } from './PostsModal';
 
 interface CalendarViewProps {
   posts: Post[];
@@ -15,10 +16,10 @@ interface CalendarViewProps {
 }
 
 export function CalendarView({ posts, onPostClick, onCreatePost, canEdit, channels }: CalendarViewProps) {
-  // Initialize with current date to show the posts
-  const [currentDate, setCurrentDate] = useState(() => {
-    return new Date(); // Current date
-  });
+  const [currentDate, setCurrentDate] = useState(() => new Date());
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedDayPosts, setSelectedDayPosts] = useState<Post[]>([]);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
   // Update current date when posts change to show the first post's month
   useEffect(() => {
@@ -83,9 +84,24 @@ export function CalendarView({ posts, onPostClick, onCreatePost, canEdit, channe
       case 'draft': return 'bg-yellow-500';
       case 'review': return 'bg-orange-500';
       case 'approved': return 'bg-blue-500';
+      case 'production': return 'bg-teal-500';
       case 'scheduled': return 'bg-green-500';
       case 'published': return 'bg-purple-500';
       default: return 'bg-gray-500';
+    }
+  };
+
+  const handleDayClick = (day: number, dayPosts: Post[]) => {
+    if (!canEdit) return;
+    
+    if (dayPosts.length > 1) {
+      setSelectedDayPosts(dayPosts);
+      setSelectedDate(new Date(currentYear, currentMonth, day));
+      setModalOpen(true);
+    } else if (dayPosts.length === 1) {
+      onPostClick(dayPosts[0]);
+    } else if (onCreatePost) {
+      onCreatePost(new Date(currentYear, currentMonth, day));
     }
   };
 
@@ -139,14 +155,7 @@ export function CalendarView({ posts, onPostClick, onCreatePost, canEdit, channe
             "h-32 p-2 cursor-pointer transition-all duration-300 hover:shadow-md border-border/30",
             hasContent && "bg-gradient-to-br from-card to-muted/50"
           )}
-          onClick={() => {
-            if (!canEdit) return;
-            if (hasContent) {
-              onPostClick(dayPosts[0]);
-            } else if (onCreatePost) {
-              onCreatePost(new Date(currentYear, currentMonth, day));
-            }
-          }}
+          onClick={() => handleDayClick(day, dayPosts)}
         >
           <div className="h-full flex flex-col">
             <div className="flex items-center justify-between mb-1">
@@ -295,12 +304,29 @@ export function CalendarView({ posts, onPostClick, onCreatePost, canEdit, channe
               <span>Agendado</span>
             </div>
             <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-teal-500"></div>
+              <span>Em Produção</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-green-500"></div>
+              <span>Agendado</span>
+            </div>
+            <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-purple-500"></div>
               <span>Publicado</span>
             </div>
           </div>
         </CardContent>
       </Card>
+
+      <PostsModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        posts={selectedDayPosts}
+        date={selectedDate}
+        onPostClick={onPostClick}
+        channels={channels}
+      />
     </div>
   );
 }
