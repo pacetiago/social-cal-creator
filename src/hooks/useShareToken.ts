@@ -49,8 +49,20 @@ export function useShareToken(orgId?: string) {
   const generatePublicLink = async (): Promise<void> => {
     const token = await generateShareToken();
     if (token) {
-      const publicUrl = `${window.location.origin}${window.location.pathname}?share=${token}`;
-      await navigator.clipboard.writeText(publicUrl);
+      const publicUrl = `${window.location.origin}/client/calendar?share=${token}`;
+      try {
+        await navigator.clipboard.writeText(publicUrl);
+        toast({
+          title: 'Link copiado!',
+          description: 'O link foi copiado para a área de transferência.',
+        });
+      } catch (err) {
+        toast({
+          title: 'Erro ao copiar',
+          description: 'Não foi possível copiar o link automaticamente.',
+          variant: 'destructive',
+        });
+      }
     }
   };
 

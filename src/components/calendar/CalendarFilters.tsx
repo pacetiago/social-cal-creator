@@ -148,7 +148,7 @@ export function CalendarFilters({
               <SelectTrigger>
                 <SelectValue placeholder="Selecionar cliente..." />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="z-50 bg-popover">
                 {clients.map((client) => (
                   <SelectItem key={client.id} value={client.id}>
                     {client.name}
@@ -174,7 +174,7 @@ export function CalendarFilters({
             <SelectTrigger>
               <SelectValue placeholder="Selecionar empresa..." />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="z-50 bg-popover">
               {selectedClient?.companies.map((company) => (
                 <SelectItem key={company.id} value={company.id}>
                   <div className="flex items-center gap-2">
@@ -196,11 +196,11 @@ export function CalendarFilters({
           <label className="text-sm font-medium text-foreground mb-2 block">
             Redes Sociais
           </label>
-          <Select onValueChange={addNetworkFilter}>
+          <Select value="" onValueChange={addNetworkFilter}>
             <SelectTrigger>
               <SelectValue placeholder="Adicionar rede..." />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="z-50 bg-popover">
               <SelectItem value="all">Todas as redes</SelectItem>
               {socialNetworks.map((network) => (
                 <SelectItem key={network} value={network}>
@@ -216,11 +216,11 @@ export function CalendarFilters({
           <label className="text-sm font-medium text-foreground mb-2 block">
             Linha Editorial
           </label>
-          <Select onValueChange={addEditorialLineFilter}>
+          <Select value="" onValueChange={addEditorialLineFilter}>
             <SelectTrigger>
               <SelectValue placeholder="Adicionar linha..." />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="z-50 bg-popover">
               <SelectItem value="all">Todas as linhas</SelectItem>
               {editorialLines.map((line) => (
                 <SelectItem key={line} value={line}>
@@ -236,11 +236,11 @@ export function CalendarFilters({
           <label className="text-sm font-medium text-foreground mb-2 block">
             Tipo de Mídia
           </label>
-          <Select onValueChange={addMediaTypeFilter}>
+          <Select value="" onValueChange={addMediaTypeFilter}>
             <SelectTrigger>
               <SelectValue placeholder="Adicionar mídia..." />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="z-50 bg-popover">
               <SelectItem value="all">Todos os tipos</SelectItem>
               {mediaTypes.map((type) => (
                 <SelectItem key={type} value={type}>
@@ -260,7 +260,7 @@ export function CalendarFilters({
             <SelectTrigger>
               <SelectValue placeholder="Selecionar mês..." />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="z-50 bg-popover">
               {[
                 'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
                 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'

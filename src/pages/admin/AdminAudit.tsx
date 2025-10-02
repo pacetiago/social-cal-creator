@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Filter, Search, Download } from 'lucide-react';
+import { Filter, Search, Download, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,53 +7,18 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AdminLayout } from '@/components/AdminLayout';
+import { useAuditLogs } from '@/hooks/useAuditLogs';
 
 export default function AdminAudit() {
   const [searchTerm, setSearchTerm] = useState('');
   const [actionFilter, setActionFilter] = useState('all');
   const [tableFilter, setTableFilter] = useState('all');
-
-  // Mock data - replace with real audit logs
-  const auditLogs = [
-    {
-      id: '1',
-      action: 'INSERT',
-      target_table: 'posts',
-      target_id: 'post-123',
-      actor_id: 'user-1',
-      actor_name: 'João Silva',
-      org_name: 'Empresa ABC',
-      created_at: '2024-01-15T10:30:00Z',
-      diff: { title: 'Novo post criado', status: 'draft' }
-    },
-    {
-      id: '2',
-      action: 'UPDATE',
-      target_table: 'posts',
-      target_id: 'post-123',
-      actor_id: 'user-2',
-      actor_name: 'Maria Santos',
-      org_name: 'Empresa ABC',
-      created_at: '2024-01-15T11:45:00Z',
-      diff: { status: { old: 'draft', new: 'review' } }
-    },
-    {
-      id: '3',
-      action: 'INSERT',
-      target_table: 'campaigns',
-      target_id: 'campaign-456',
-      actor_id: 'user-1',
-      actor_name: 'João Silva',
-      org_name: 'Varejo Brasil',
-      created_at: '2024-01-15T14:20:00Z',
-      diff: { name: 'Black Friday 2024', utm_campaign: 'black-friday' }
-    }
-  ];
+  const { logs: auditLogs, loading, refetch } = useAuditLogs();
 
   const filteredLogs = auditLogs.filter(log => {
-    const matchesSearch = log.actor_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const matchesSearch = (log.actor_name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
                          log.target_table.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         log.org_name.toLowerCase().includes(searchTerm.toLowerCase());
+                         (log.org_name?.toLowerCase() || '').includes(searchTerm.toLowerCase());
     
     const matchesAction = actionFilter === 'all' || log.action === actionFilter;
     const matchesTable = tableFilter === 'all' || log.target_table === tableFilter;
@@ -70,6 +35,16 @@ export default function AdminAudit() {
     }
   };
 
+  if (loading) {
+    return (
+      <AdminLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      </AdminLayout>
+    );
+  }
+
   return (
     <AdminLayout>
       <div className="p-8">
@@ -79,10 +54,16 @@ export default function AdminAudit() {
               <h1 className="text-2xl font-bold">Logs de Auditoria</h1>
               <p className="text-muted-foreground">Acompanhe todas as atividades da plataforma</p>
             </div>
-            <Button variant="outline">
-              <Download className="h-4 w-4 mr-2" />
-              Exportar Logs
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => refetch()}>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Atualizar
+              </Button>
+              <Button variant="outline">
+                <Download className="h-4 w-4 mr-2" />
+                Exportar Logs
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -153,8 +134,8 @@ export default function AdminAudit() {
                     <TableCell className="font-mono text-sm">
                       {new Date(log.created_at).toLocaleString('pt-BR')}
                     </TableCell>
-                    <TableCell>{log.actor_name}</TableCell>
-                    <TableCell>{log.org_name}</TableCell>
+                    <TableCell>{log.actor_name || 'Sistema'}</TableCell>
+                    <TableCell>{log.org_name || 'N/A'}</TableCell>
                     <TableCell>
                       <Badge variant={getActionBadgeColor(log.action)}>
                         {log.action}
