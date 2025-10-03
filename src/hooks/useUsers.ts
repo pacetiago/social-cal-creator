@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 
 interface User {
   id: string;
@@ -16,11 +17,41 @@ export function useUsers() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const fetchUsers = async () => {
     try {
       setLoading(true);
 
+      // Check if current user is admin by fetching their profile
+      const { data: currentProfile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user?.id)
+        .single();
+
+      // If user is admin, use edge function to get all users
+      if (currentProfile?.role === 'admin') {
+        console.log('Admin user detected, fetching all users via edge function');
+        
+        const { data: functionData, error: functionError } = await supabase.functions.invoke('list-users', {
+          body: {}
+        });
+
+        if (functionError) {
+          console.error('Edge function error:', functionError);
+          // Fallback to regular query if edge function fails
+          throw functionError;
+        }
+
+        if (functionData?.users) {
+          setUsers(functionData.users);
+          setError(null);
+          return;
+        }
+      }
+
+      // Fallback: Regular RLS-constrained query for non-admins
       const { data, error: fetchError } = await supabase
         .from('profiles')
         .select('*')

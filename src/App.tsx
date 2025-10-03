@@ -29,6 +29,7 @@ import ClientLibrary from "./pages/client/ClientLibrary";
 import ClientSettings from "./pages/client/ClientSettings";
 import ClientExports from "./pages/client/ClientExports";
 import SelectOrganization from "./pages/SelectOrganization";
+import PublicCalendar from "./pages/PublicCalendar";
 
 const queryClient = new QueryClient();
 
@@ -42,6 +43,7 @@ const App = () => (
           <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route path="/" element={<Index />} />
+            <Route path="/public/calendar" element={<PublicCalendar />} />
             <Route path="/select-org" element={
               <ProtectedRoute>
                 <SelectOrganization />

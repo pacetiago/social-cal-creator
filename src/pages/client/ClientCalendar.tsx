@@ -11,6 +11,7 @@ import { CalendarView } from '@/components/calendar/CalendarView';
 import { ModernPostForm } from '@/components/calendar/ModernPostForm';
 import { ClientFilters } from '@/components/calendar/ClientFilters';
 import { PostSelection } from '@/components/posts/PostSelection';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -372,16 +373,18 @@ export default function ClientCalendar() {
           {/* Sidebar with Filters */}
           {showFilters && (
             <div className="lg:col-span-1">
-              <ClientFilters
-                selectedClient={selectedClient}
-                selectedCompany={selectedCompany}
-                selectedResponsibility={selectedResponsibility}
-                onClientChange={setSelectedClient}
-                onCompanyChange={setSelectedCompany}
-                onResponsibilityChange={setSelectedResponsibility}
-                clients={clients}
-                companies={companies}
-              />
+              <ErrorBoundary>
+                <ClientFilters
+                  selectedClient={selectedClient}
+                  selectedCompany={selectedCompany}
+                  selectedResponsibility={selectedResponsibility}
+                  onClientChange={setSelectedClient}
+                  onCompanyChange={setSelectedCompany}
+                  onResponsibilityChange={setSelectedResponsibility}
+                  clients={clients || []}
+                  companies={companies || []}
+                />
+              </ErrorBoundary>
             </div>
           )}
         </div>

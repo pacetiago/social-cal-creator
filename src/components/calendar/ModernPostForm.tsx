@@ -64,7 +64,8 @@ export function ModernPostForm({
     persona: '',
     insights: '',
     responsibility: 'agency' as 'agency' | 'client',
-    media_type: '' as MediaType | ''
+    media_type: '' as MediaType | '',
+    tags: [] as string[]
   });
   const [loading, setLoading] = useState(false);
 
@@ -94,7 +95,8 @@ export function ModernPostForm({
           persona: initialData.persona || '',
           insights: initialData.insights || '',
           responsibility: initialData.responsibility || 'agency',
-          media_type: initialData.media_type || ''
+          media_type: initialData.media_type || '',
+          tags: initialData.tags || []
         });
         setSelectedClientId(initialData.client_id || '');
       } else {
@@ -113,7 +115,8 @@ export function ModernPostForm({
           persona: '',
           insights: '',
           responsibility: 'agency',
-          media_type: ''
+          media_type: '',
+          tags: []
         });
         setSelectedClientId('');
       }
@@ -130,30 +133,61 @@ export function ModernPostForm({
     setLoading(true);
     
     try {
-      await onSave({
-        title: formData.title,
-        content: formData.content,
-        status: formData.status,
-        channel_id: formData.channel_ids[0] || null, // For compatibility, use first channel
-        channel_ids: formData.channel_ids,
-        campaign_id: formData.campaign_id || null,
-        client_id: formData.client_id || null,
-        company_id: formData.company_ids?.[0] || null, // Use first selected company for backwards compatibility
-        publish_at: formData.publish_at?.toISOString() || null,
-        theme: formData.theme,
-        persona: formData.persona,
-        insights: formData.insights,
-        responsibility: formData.responsibility,
-        media_type: formData.media_type || null,
-        utm_source: null,
-        utm_campaign: null,
-        utm_content: null,
-        tags: [],
-        variations: [],
-        created_by: null,
-        updated_by: null,
-        org_id: '' // This will be set by the hook
-      });
+      // If multiple companies selected and creating new post, create one post per company
+      if (!initialData && formData.company_ids.length > 1) {
+        for (const companyId of formData.company_ids) {
+          await onSave({
+            title: formData.title,
+            content: formData.content,
+            status: formData.status,
+            channel_id: formData.channel_ids[0] || null,
+            channel_ids: formData.channel_ids,
+            campaign_id: formData.campaign_id || null,
+            client_id: formData.client_id || null,
+            company_id: companyId,
+            publish_at: formData.publish_at?.toISOString() || null,
+            theme: formData.theme,
+            persona: formData.persona,
+            insights: formData.insights,
+            responsibility: formData.responsibility,
+            media_type: formData.media_type || null,
+            utm_source: null,
+            utm_campaign: null,
+            utm_content: null,
+            tags: formData.tags,
+            variations: [],
+            created_by: null,
+            updated_by: null,
+            org_id: ''
+          });
+        }
+      } else {
+        // Single company or editing existing post
+        await onSave({
+          title: formData.title,
+          content: formData.content,
+          status: formData.status,
+          channel_id: formData.channel_ids[0] || null,
+          channel_ids: formData.channel_ids,
+          campaign_id: formData.campaign_id || null,
+          client_id: formData.client_id || null,
+          company_id: formData.company_ids?.[0] || null,
+          publish_at: formData.publish_at?.toISOString() || null,
+          theme: formData.theme,
+          persona: formData.persona,
+          insights: formData.insights,
+          responsibility: formData.responsibility,
+          media_type: formData.media_type || null,
+          utm_source: null,
+          utm_campaign: null,
+          utm_content: null,
+          tags: formData.tags,
+          variations: [],
+          created_by: null,
+          updated_by: null,
+          org_id: ''
+        });
+      }
       
       handleClose();
     } finally {
@@ -236,39 +270,51 @@ export function ModernPostForm({
             </div>
 
             <div>
-              <Label htmlFor="company">Empresa</Label>
-              <Select
-                value={formData.company_id}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, company_id: value }))}
-                disabled={!selectedClientId}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione uma empresa..." />
-                </SelectTrigger>
-                <SelectContent className="z-50 bg-popover text-popover-foreground border">
-                  {companiesLoading && (
-                    <SelectItem value="__loading" disabled>
-                      Carregando...
-                    </SelectItem>
-                  )}
-                  {!companiesLoading && companies.length === 0 && (
-                    <SelectItem value="__empty" disabled>
-                      Nenhuma empresa encontrada
-                    </SelectItem>
-                  )}
-                  {companies.map((company) => (
-                    <SelectItem key={company.id} value={company.id}>
-                      <div className="flex items-center gap-2">
-                        <div 
-                          className="w-3 h-3 rounded-full"
-                          style={{ backgroundColor: company.color }}
-                        />
-                        {company.name}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label htmlFor="companies">Empresas (múltipla seleção)</Label>
+              <div className="space-y-2 max-h-32 overflow-y-auto border rounded-md p-3 bg-background">
+                {companiesLoading && (
+                  <p className="text-sm text-muted-foreground">Carregando empresas...</p>
+                )}
+                {!companiesLoading && !selectedClientId && (
+                  <p className="text-sm text-muted-foreground">Selecione um cliente primeiro</p>
+                )}
+                {!companiesLoading && selectedClientId && companies.length === 0 && (
+                  <p className="text-sm text-muted-foreground">Nenhuma empresa encontrada</p>
+                )}
+                {!companiesLoading && companies.map((company) => (
+                  <div key={company.id} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`company-${company.id}`}
+                      checked={formData.company_ids.includes(company.id)}
+                      onCheckedChange={(checked) => {
+                        setFormData(prev => {
+                          if (checked) {
+                            return {
+                              ...prev,
+                              company_ids: [...prev.company_ids, company.id],
+                              company_id: prev.company_ids.length === 0 ? company.id : prev.company_id
+                            };
+                          } else {
+                            const newIds = prev.company_ids.filter(id => id !== company.id);
+                            return {
+                              ...prev,
+                              company_ids: newIds,
+                              company_id: newIds[0] || ''
+                            };
+                          }
+                        });
+                      }}
+                    />
+                    <Label htmlFor={`company-${company.id}`} className="text-sm font-normal flex items-center gap-2">
+                      <div 
+                        className="w-3 h-3 rounded-full"
+                        style={{ backgroundColor: company.color }}
+                      />
+                      {company.name}
+                    </Label>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -412,25 +458,50 @@ export function ModernPostForm({
             </div>
 
             <div>
-              <Label htmlFor="media_type">Tipo de Mídia</Label>
-              <Select
-                value={formData.media_type}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, media_type: value as MediaType | '' }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o tipo..." />
-                </SelectTrigger>
-                <SelectContent className="z-50 bg-popover text-popover-foreground border">
-                  <SelectItem value="Carrossel">Carrossel</SelectItem>
-                  <SelectItem value="Imagem">Imagem</SelectItem>
-                  <SelectItem value="Texto blog">Texto blog</SelectItem>
-                  <SelectItem value="Vídeo">Vídeo</SelectItem>
-                  <SelectItem value="Post Estático">Post Estático</SelectItem>
-                  <SelectItem value="Post/Fotos">Post/Fotos</SelectItem>
-                  <SelectItem value="Reels">Reels</SelectItem>
-                  <SelectItem value="Story">Story</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label htmlFor="media_types">Tipos de Mídia (múltipla seleção)</Label>
+              <div className="space-y-2 max-h-32 overflow-y-auto border rounded-md p-3 bg-background">
+                {['Carrossel', 'Imagem', 'Texto blog', 'Vídeo', 'Post Estático', 'Post/Fotos', 'Reels', 'Story'].map((type) => {
+                  const isChecked = formData.media_type === type || formData.tags?.some(tag => tag === `media:${type}`);
+                  
+                  return (
+                    <div key={type} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`media-${type}`}
+                        checked={isChecked}
+                        onCheckedChange={(checked) => {
+                          const currentTags = formData.tags || [];
+                          const mediaTag = `media:${type}`;
+                          
+                          if (checked) {
+                            // Add to tags
+                            const newTags = [...currentTags.filter(t => !t.startsWith('media:')), mediaTag];
+                            // Set as primary media_type if it's the first one
+                            setFormData(prev => ({
+                              ...prev,
+                              media_type: prev.media_type || (type as MediaType),
+                              tags: newTags
+                            }));
+                          } else {
+                            // Remove from tags
+                            const newTags = currentTags.filter(t => t !== mediaTag);
+                            const remainingMediaTags = newTags.filter(t => t.startsWith('media:'));
+                            setFormData(prev => ({
+                              ...prev,
+                              media_type: remainingMediaTags.length > 0 
+                                ? remainingMediaTags[0].replace('media:', '') as MediaType 
+                                : '',
+                              tags: newTags
+                            }));
+                          }
+                        }}
+                      />
+                      <Label htmlFor={`media-${type}`} className="text-sm font-normal">
+                        {type}
+                      </Label>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
 
