@@ -49,7 +49,7 @@ serve(async (req) => {
       throw new Error('User ID and role are required')
     }
 
-    // Check if the user has platform admin permissions
+    // SECURITY: Check if the user has platform admin permissions
     const { data: hasAdminRole, error: roleCheckError } = await supabaseAdmin
       .rpc('has_platform_role', { 
         _user_id: user.id, 
@@ -60,12 +60,12 @@ serve(async (req) => {
       throw new Error('Unauthorized: Platform admin privileges required')
     }
 
-    // Prevent self-modification
+    // SECURITY: Prevent self-modification
     if (userId === user.id) {
       throw new Error('Cannot modify your own role')
     }
 
-    // Update the user's role in the profiles table
+    // Update the user's role in the profiles table (kept for backward compatibility)
     const { error: updateError } = await supabaseAdmin
       .from('profiles')
       .update({ role })

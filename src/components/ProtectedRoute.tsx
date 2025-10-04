@@ -12,27 +12,34 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const [validatingToken, setValidatingToken] = useState(false);
   const [tokenValid, setTokenValid] = useState(false);
 
-  // Check if share token exists in URL
-  const shareToken = typeof window !== 'undefined' 
-    ? new URLSearchParams(window.location.search).get('share')
+  // Check if URL has a share token parameter
+  const urlParams = typeof window !== 'undefined' 
+    ? new URLSearchParams(window.location.search) 
     : null;
+  const shareToken = urlParams?.get('share');
 
-  // Validate share token with backend
+  // SECURITY FIX: Validate share token if present (prevents bypass with ?share=anything)
   useEffect(() => {
+    if (!shareToken) return;
+
     const validateToken = async () => {
-      if (!shareToken) return;
-      
       setValidatingToken(true);
       try {
-        const { data, error } = await supabase.functions.invoke('public-calendar', {
-          body: { token: shareToken, validate_only: true }
-        });
-        
-        if (!error && data?.valid) {
-          setTokenValid(true);
+        const { data, error } = await supabase
+          .from('share_tokens')
+          .select('is_active, expires_at')
+          .eq('token', shareToken)
+          .single();
+
+        if (!error && data?.is_active) {
+          // Check if token is not expired
+          const isExpired = data.expires_at && new Date(data.expires_at) < new Date();
+          setTokenValid(!isExpired);
+        } else {
+          setTokenValid(false);
         }
-      } catch (error) {
-        console.error('Token validation failed:', error);
+      } catch (err) {
+        setTokenValid(false);
       } finally {
         setValidatingToken(false);
       }
@@ -42,12 +49,24 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   }, [shareToken]);
 
   // Allow access if share token is validated
-  if (shareToken && tokenValid) {
-    return <>{children}</>;
+  if (shareToken) {
+    if (validatingToken) {
+      return (
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      );
+    }
+    
+    if (tokenValid) {
+      return <>{children}</>;
+    }
+    
+    // Invalid token - redirect to auth
+    return <Navigate to="/auth" replace />;
   }
 
-  // Show loading while validating token or authenticating
-  if (loading || (shareToken && validatingToken)) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>

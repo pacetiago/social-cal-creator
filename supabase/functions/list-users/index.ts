@@ -49,7 +49,7 @@ Deno.serve(async (req) => {
 
     console.log('list-users: User authenticated:', user.id);
 
-    // Check if user is platform admin using the secure function
+    // SECURITY: Check if user is platform admin using the secure function
     const { data: hasAdminRole, error: roleCheckError } = await supabase
       .rpc('has_platform_role', { 
         _user_id: user.id, 
