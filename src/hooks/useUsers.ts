@@ -23,16 +23,17 @@ export function useUsers() {
     try {
       setLoading(true);
 
-      // Check if current user is admin by fetching their profile
-      const { data: currentProfile } = await supabase
-        .from('profiles')
+      // Check if current user is platform admin by checking user_roles table
+      const { data: userRoles } = await supabase
+        .from('user_roles')
         .select('role')
-        .eq('id', user?.id)
-        .single();
+        .eq('user_id', user?.id);
 
-      // If user is admin, use edge function to get all users
-      if (currentProfile?.role === 'admin') {
-        console.log('Admin user detected, fetching all users via edge function');
+      const isPlatformAdmin = userRoles?.some(r => r.role === 'platform_admin');
+
+      // If user is platform admin, use edge function to get all users
+      if (isPlatformAdmin) {
+        console.log('Platform admin user detected, fetching all users via edge function');
         
         const { data: functionData, error: functionError } = await supabase.functions.invoke('list-users', {
           body: {}
@@ -51,7 +52,7 @@ export function useUsers() {
         }
       }
 
-      // Fallback: Regular RLS-constrained query for non-admins
+      // Fallback: Regular RLS-constrained query for non-platform admins
       const { data, error: fetchError } = await supabase
         .from('profiles')
         .select('*')

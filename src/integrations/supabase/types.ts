@@ -711,6 +711,30 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: string
+          role: Database["public"]["Enums"]["platform_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["platform_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["platform_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -739,6 +763,13 @@ export type Database = {
       get_user_role_secure: {
         Args: { user_id: string }
         Returns: string
+      }
+      has_platform_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["platform_role"]
+          _user_id: string
+        }
+        Returns: boolean
       }
       is_platform_admin: {
         Args: Record<PropertyKey, never>
@@ -777,6 +808,7 @@ export type Database = {
         | "Post/Fotos"
         | "Reels"
         | "Story"
+      platform_role: "platform_admin" | "user"
       post_responsibility: "client" | "agency"
       post_status:
         | "idea"
@@ -941,6 +973,7 @@ export const Constants = {
         "Reels",
         "Story",
       ],
+      platform_role: ["platform_admin", "user"],
       post_responsibility: ["client", "agency"],
       post_status: [
         "idea",

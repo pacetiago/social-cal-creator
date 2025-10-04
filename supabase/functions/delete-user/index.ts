@@ -42,15 +42,20 @@ serve(async (req) => {
       throw new Error('Unauthorized')
     }
 
-    // Check if the user has admin permissions
-    const { data: profile } = await supabaseAdmin
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
+    // Check if the user has platform admin permissions
+    const { data: hasAdminRole } = await supabaseAdmin
+      .rpc('has_platform_role', { 
+        _user_id: user.id, 
+        _role: 'platform_admin' 
+      })
 
-    if (!profile || profile.role !== 'admin') {
-      throw new Error('Insufficient permissions')
+    if (!hasAdminRole) {
+      throw new Error('Insufficient permissions - platform admin required')
+    }
+
+    // Prevent self-deletion
+    if (userId === user.id) {
+      throw new Error('Cannot delete your own account')
     }
 
     // Get request body

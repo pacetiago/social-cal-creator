@@ -49,30 +49,30 @@ Deno.serve(async (req) => {
 
     console.log('list-users: User authenticated:', user.id);
 
-    // Check if user is platform admin
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
+    // Check if user is platform admin using the secure function
+    const { data: hasAdminRole, error: roleCheckError } = await supabase
+      .rpc('has_platform_role', { 
+        _user_id: user.id, 
+        _role: 'platform_admin' 
+      });
 
-    if (profileError || !profile) {
-      console.error('list-users: Failed to fetch profile', profileError);
+    if (roleCheckError) {
+      console.error('list-users: Failed to check role', roleCheckError);
       return new Response(
         JSON.stringify({ error: 'Failed to verify permissions' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    if (profile.role !== 'admin') {
-      console.error('list-users: User is not admin, role:', profile.role);
+    if (!hasAdminRole) {
+      console.error('list-users: User is not platform admin');
       return new Response(
-        JSON.stringify({ error: 'Insufficient permissions. Admin access required.' }),
+        JSON.stringify({ error: 'Insufficient permissions. Platform admin access required.' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log('list-users: User is admin, fetching all profiles');
+    console.log('list-users: User is platform admin, fetching all profiles');
 
     // Fetch all profiles using service role key
     const { data: profiles, error: fetchError } = await supabase
