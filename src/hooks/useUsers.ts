@@ -41,7 +41,6 @@ export function useUsers() {
 
         if (functionError) {
           console.error('Edge function error:', functionError);
-          // Fallback to regular query if edge function fails
           throw functionError;
         }
 
@@ -71,33 +70,35 @@ export function useUsers() {
     }
   };
 
-  const updateUser = async (id: string, updates: Partial<User>) => {
+  const updateUserRole = async (userId: string, newRole: 'platform_admin' | 'user') => {
     try {
-      const { data, error: updateError } = await supabase
-        .from('profiles')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Not authenticated');
 
-      if (updateError) throw updateError;
-
-      setUsers(prev => prev.map(user => user.id === id ? data : user));
-      
-      toast({
-        title: 'Usuário atualizado',
-        description: 'As informações foram salvas com sucesso.',
+      const { error } = await supabase.functions.invoke('update-user-role', {
+        body: { userId, role: newRole },
+        headers: { Authorization: `Bearer ${session.access_token}` }
       });
 
-      return { data, error: null };
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to update user';
+      if (error) throw error;
+
+      // Refresh users list after update
+      await fetchUsers();
+      
       toast({
-        title: 'Erro ao atualizar usuário',
+        title: 'Função atualizada',
+        description: 'A função do usuário foi atualizada com sucesso.',
+      });
+
+      return { error: null };
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to update user role';
+      toast({
+        title: 'Erro ao atualizar função',
         description: message,
         variant: 'destructive',
       });
-      return { data: null, error: message };
+      return { error: message };
     }
   };
 
