@@ -42,15 +42,15 @@ serve(async (req) => {
       throw new Error('Unauthorized')
     }
 
-    // Check if the user has admin permissions
-    const { data: profile } = await supabaseAdmin
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
+    // Check if the user has platform_admin role
+    const { data: isPlatformAdmin } = await supabaseAdmin
+      .rpc('has_platform_role', { 
+        _user_id: user.id, 
+        _role: 'platform_admin' 
+      })
 
-    if (!profile || profile.role !== 'admin') {
-      throw new Error('Insufficient permissions')
+    if (!isPlatformAdmin) {
+      throw new Error('Insufficient permissions - platform_admin role required')
     }
 
     // Get request body
@@ -70,17 +70,33 @@ serve(async (req) => {
       throw createError
     }
 
-    // Update the user's role in the profiles table
-    if (newUser.user) {
-      const { error: updateError } = await supabaseAdmin
-        .from('profiles')
-        .update({ role })
-        .eq('id', newUser.user.id)
+    // Insert the user's role into the user_roles table
+    if (newUser.user && role) {
+      const platformRole = role === 'admin' ? 'platform_admin' : 'user';
+      
+      const { error: roleError } = await supabaseAdmin
+        .from('user_roles')
+        .insert({ 
+          user_id: newUser.user.id, 
+          role: platformRole,
+          created_by: user.id
+        })
 
-      if (updateError) {
-        console.error('Error updating user role:', updateError)
+      if (roleError) {
+        console.error('Error assigning user role:', roleError)
         // Don't throw here as the user was created successfully
       }
+
+      // Log role assignment in audit_log
+      await supabaseAdmin
+        .from('audit_log')
+        .insert({
+          actor_id: user.id,
+          action: 'USER_CREATED',
+          target_table: 'user_roles',
+          target_id: newUser.user.id,
+          diff: { role: platformRole, email }
+        })
     }
 
     return new Response(

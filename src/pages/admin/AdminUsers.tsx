@@ -17,7 +17,7 @@ import { createUserSchema, sanitizeInput } from '@/lib/validation';
 import type { CreateUserData } from '@/lib/validation';
 
 export default function AdminUsers() {
-  const { users, loading, updateUser, refetch } = useUsers();
+  const { users, loading, updateUserRole, refetch } = useUsers();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [showCreateUser, setShowCreateUser] = useState(false);
@@ -36,24 +36,19 @@ export default function AdminUsers() {
   );
 
   const handleRoleChange = async (userId: string, newRole: string) => {
-    await updateUser(userId, { role: newRole });
+    await updateUserRole(userId, newRole as 'platform_admin' | 'user');
   };
 
   const handleDeactivateUser = async (userId: string, userEmail: string) => {
     if (confirm(`Tem certeza que deseja desativar o usuário ${userEmail}?`)) {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) throw new Error('Usuário não autenticado');
-
-        const { error } = await supabase.functions.invoke('update-user-role', {
-          body: { userId, role: 'inactive' },
-          headers: { Authorization: `Bearer ${session.access_token}` }
+        const { error } = await supabase.functions.invoke('delete-user', {
+          body: { userId }
         });
 
         if (error) throw error;
 
-        // Atualiza localmente o estado
-        await updateUser(userId, { role: 'inactive' });
+        await refetch();
 
         toast({
           title: 'Usuário desativado',
@@ -251,9 +246,9 @@ export default function AdminUsers() {
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent>
+                       <SelectContent>
                         <SelectItem value="user">Usuário</SelectItem>
-                        <SelectItem value="admin">Administrador</SelectItem>
+                        <SelectItem value="platform_admin">Administrador da Plataforma</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -292,7 +287,7 @@ export default function AdminUsers() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {users.filter(user => user.role === 'admin').length}
+                {users.filter(user => user.platform_role === 'platform_admin').length}
               </div>
               <p className="text-xs text-muted-foreground">Usuários com acesso admin</p>
             </CardContent>
@@ -307,7 +302,7 @@ export default function AdminUsers() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {users.filter(user => user.role === 'user').length}
+                {users.filter(user => user.platform_role === 'user').length}
               </div>
               <p className="text-xs text-muted-foreground">Usuários regulares</p>
             </CardContent>
@@ -350,15 +345,15 @@ export default function AdminUsers() {
                     <TableCell>{user.email}</TableCell>
                     <TableCell>
                       <Select
-                        value={user.role}
+                        value={user.platform_role || 'user'}
                         onValueChange={(newRole) => handleRoleChange(user.id, newRole)}
                       >
-                        <SelectTrigger className="w-32">
+                        <SelectTrigger className="w-40">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="user">User</SelectItem>
-                          <SelectItem value="admin">Admin</SelectItem>
+                          <SelectItem value="user">Usuário</SelectItem>
+                          <SelectItem value="platform_admin">Admin Plataforma</SelectItem>
                         </SelectContent>
                       </Select>
                     </TableCell>

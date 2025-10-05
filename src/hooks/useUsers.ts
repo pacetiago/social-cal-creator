@@ -7,7 +7,7 @@ interface User {
   id: string;
   email: string;
   full_name?: string;
-  role: string;
+  platform_role?: string;
   created_at: string;
   updated_at: string;
 }
@@ -109,7 +109,7 @@ export function useUsers() {
     users,
     loading,
     error,
-    updateUser,
+    updateUserRole,
     refetch: fetchUsers
   };
 }
