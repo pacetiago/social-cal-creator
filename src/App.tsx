@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { ThemeProvider } from "next-themes";
 
 // Pages
 import Index from "./pages/Index";
@@ -36,96 +37,98 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/" element={<Index />} />
-            <Route path="/public/calendar" element={<PublicCalendar />} />
-            <Route path="/select-org" element={
-              <ProtectedRoute>
-                <SelectOrganization />
-              </ProtectedRoute>
-            } />
-            
-            {/* Admin Routes */}
-            <Route path="/admin" element={
-              <ProtectedRoute>
-                <AdminDashboard />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/orgs" element={
-              <ProtectedRoute>
-                <AdminOrgs />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/users" element={
-              <ProtectedRoute>
-                <AdminUsers />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/audit" element={
-              <ProtectedRoute>
-                <AdminAudit />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/companies" element={
-              <ProtectedRoute>
-                {/** Gestão de empresas por cliente */}
-                {/** ... keep existing code (other admin routes) */}
-                <AdminCompanies />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/channels" element={
-              <ProtectedRoute>
-                <AdminChannels />
-              </ProtectedRoute>
-            } />
-            
-            {/* Client Portal Routes */}
-            <Route path="/c/:slug" element={
-              <ProtectedRoute>
-                <ClientCalendar />
-              </ProtectedRoute>
-            } />
-            <Route path="/c/:slug/kanban" element={
-              <ProtectedRoute>
-                <ClientKanban />
-              </ProtectedRoute>
-            } />
-            <Route path="/c/:slug/post/:id" element={
-              <ProtectedRoute>
-                <ClientPost />
-              </ProtectedRoute>
-            } />
-            <Route path="/c/:slug/campaigns" element={
-              <ProtectedRoute>
-                <ClientCampaigns />
-              </ProtectedRoute>
-            } />
-            <Route path="/c/:slug/library" element={
-              <ProtectedRoute>
-                <ClientLibrary />
-              </ProtectedRoute>
-            } />
-            <Route path="/c/:slug/settings" element={
-              <ProtectedRoute>
-                <ClientSettings />
-              </ProtectedRoute>
-            } />
-            <Route path="/c/:slug/exports" element={
-              <ProtectedRoute>
-                <ClientExports />
-              </ProtectedRoute>
-            } />
-            
-            {/* Catch all route */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/" element={<Index />} />
+              <Route path="/public/calendar" element={<PublicCalendar />} />
+              <Route path="/select-org" element={
+                <ProtectedRoute>
+                  <SelectOrganization />
+                </ProtectedRoute>
+              } />
+              
+              {/* Admin Routes */}
+              <Route path="/admin" element={
+                <ProtectedRoute>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/orgs" element={
+                <ProtectedRoute>
+                  <AdminOrgs />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/users" element={
+                <ProtectedRoute>
+                  <AdminUsers />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/audit" element={
+                <ProtectedRoute>
+                  <AdminAudit />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/companies" element={
+                <ProtectedRoute>
+                  {/** Gestão de empresas por cliente */}
+                  {/** ... keep existing code (other admin routes) */}
+                  <AdminCompanies />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/channels" element={
+                <ProtectedRoute>
+                  <AdminChannels />
+                </ProtectedRoute>
+              } />
+              
+              {/* Client Portal Routes */}
+              <Route path="/c/:slug" element={
+                <ProtectedRoute>
+                  <ClientCalendar />
+                </ProtectedRoute>
+              } />
+              <Route path="/c/:slug/kanban" element={
+                <ProtectedRoute>
+                  <ClientKanban />
+                </ProtectedRoute>
+              } />
+              <Route path="/c/:slug/post/:id" element={
+                <ProtectedRoute>
+                  <ClientPost />
+                </ProtectedRoute>
+              } />
+              <Route path="/c/:slug/campaigns" element={
+                <ProtectedRoute>
+                  <ClientCampaigns />
+                </ProtectedRoute>
+              } />
+              <Route path="/c/:slug/library" element={
+                <ProtectedRoute>
+                  <ClientLibrary />
+                </ProtectedRoute>
+              } />
+              <Route path="/c/:slug/settings" element={
+                <ProtectedRoute>
+                  <ClientSettings />
+                </ProtectedRoute>
+              } />
+              <Route path="/c/:slug/exports" element={
+                <ProtectedRoute>
+                  <ClientExports />
+                </ProtectedRoute>
+              } />
+              
+              {/* Catch all route */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </ThemeProvider>
     </AuthProvider>
   </QueryClientProvider>
 );

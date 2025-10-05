@@ -18,13 +18,18 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Calendar, Grid, List, Plus, Filter, Share2, CheckSquare } from 'lucide-react';
 import { PostStatus, Post } from '@/types/multi-tenant';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 export default function ClientCalendar() {
-  const { organization, loading: orgLoading, hasAccess, canEdit } = useOrganization();
+  const { organization, loading: orgLoading, hasAccess, canEdit, canManage } = useOrganization();
   const { toast } = useToast();
   const [selectedClient, setSelectedClient] = useState('');
   const [selectedCompany, setSelectedCompany] = useState('');
   const [selectedResponsibility, setSelectedResponsibility] = useState('');
+  const [mediaType, setMediaType] = useState('');
+  const [contentQuery, setContentQuery] = useState('');
+  const [startDate, setStartDate] = useState<Date | undefined>();
+  const [endDate, setEndDate] = useState<Date | undefined>();
   
   // Check for share token in URL
   const urlParams = new URLSearchParams(window.location.search);
@@ -200,13 +205,7 @@ export default function ClientCalendar() {
                 <Filter className="h-4 w-4 mr-2" />
                 Filtros
               </Button>
-              {!isPublicView && canEdit && (
-                <Button variant="outline" size="sm" onClick={() => setShowSelection(!showSelection)}>
-                  <CheckSquare className="h-4 w-4 mr-2" />
-                  Seleção em Massa
-                </Button>
-              )}
-              {!isPublicView && (
+              {!isPublicView && canManage && (
                 <Button 
                   variant="outline" 
                   size="sm" 
@@ -217,6 +216,7 @@ export default function ClientCalendar() {
                   {shareLoading ? 'Gerando...' : 'Gerar Link Público'}
                 </Button>
               )}
+              <ThemeToggle />
               {!isPublicView && canEdit && (
                 <Button onClick={() => handleCreatePost()}>
                   <Plus className="h-4 w-4 mr-2" />
