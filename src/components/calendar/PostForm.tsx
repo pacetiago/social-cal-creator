@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card } from "@/components/ui/card";
-import { Save, X, Users, Building2 } from "lucide-react";
+import { Save, X, Users, Building2, Paperclip } from "lucide-react";
 
 interface PostFormProps {
   isOpen: boolean;
@@ -57,6 +57,7 @@ export function PostForm({ isOpen, onClose, onSave, initialData, clients, defaul
     responsibility: initialData?.responsibility || 'Agência' as ResponsibilityType,
     insight: initialData?.insight || '',
   });
+  const [attachments, setAttachments] = useState<File[]>([]);
 
   const selectedClient = clients.find(c => c.id === formData.clientId);
 
@@ -379,6 +380,30 @@ export function PostForm({ isOpen, onClose, onSave, initialData, clients, defaul
             />
             {validationErrors.insight && (
               <p className="text-sm text-destructive">{validationErrors.insight}</p>
+            )}
+          </div>
+
+          {/* Attachments */}
+          <div>
+            <Label htmlFor="attachments" className="flex items-center gap-2">
+              <Paperclip className="h-4 w-4" />
+              Anexos
+            </Label>
+            <Input
+              id="attachments"
+              type="file"
+              multiple
+              onChange={(e) => {
+                const files = Array.from(e.target.files || []);
+                setAttachments(files);
+              }}
+              accept="image/*,video/*,.pdf,.doc,.docx"
+              className="cursor-pointer"
+            />
+            {attachments.length > 0 && (
+              <p className="text-sm text-muted-foreground mt-2">
+                {attachments.length} arquivo(s) selecionado(s)
+              </p>
             )}
           </div>
 

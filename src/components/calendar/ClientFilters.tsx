@@ -67,7 +67,7 @@ export function ClientFilters({
               <SelectValue placeholder="Todos os clientes" />
             </SelectTrigger>
             <SelectContent className="z-50 bg-popover text-popover-foreground border">
-              <SelectItem value="">Todos os clientes</SelectItem>
+              <SelectItem value="all">Todos os clientes</SelectItem>
               {clients.map((client) => (
                 <SelectItem key={client.id} value={client.id}>
                   {client.name}
@@ -89,7 +89,7 @@ export function ClientFilters({
               <SelectValue placeholder="Todas as empresas" />
             </SelectTrigger>
             <SelectContent className="z-50 bg-popover text-popover-foreground border">
-              <SelectItem value="">Todas as empresas</SelectItem>
+              <SelectItem value="all">Todas as empresas</SelectItem>
               {companies.map((company) => (
                 <SelectItem key={company.id} value={company.id}>
                   <div className="flex items-center gap-2">
@@ -113,7 +113,7 @@ export function ClientFilters({
               <SelectValue placeholder="Todas" />
             </SelectTrigger>
             <SelectContent className="z-50 bg-popover text-popover-foreground border">
-              <SelectItem value="">Todas</SelectItem>
+              <SelectItem value="all">Todas</SelectItem>
               <SelectItem value="agency">Agência</SelectItem>
               <SelectItem value="client">Cliente</SelectItem>
             </SelectContent>
@@ -127,7 +127,7 @@ export function ClientFilters({
               <SelectValue placeholder="Todos os tipos" />
             </SelectTrigger>
             <SelectContent className="z-50 bg-popover text-popover-foreground border">
-              <SelectItem value="">Todos os tipos</SelectItem>
+              <SelectItem value="all">Todos os tipos</SelectItem>
               {mediaTypes.map((type) => (
                 <SelectItem key={type} value={type}>{type}</SelectItem>
               ))}

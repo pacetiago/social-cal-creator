@@ -6,7 +6,6 @@ import { useCampaigns } from '@/hooks/useCampaigns';
 import { useClients } from '@/hooks/useClients';
 import { useCompanies } from '@/hooks/useCompanies';
 import { usePublicCalendar } from '@/hooks/usePublicCalendar';
-import { useShareToken } from '@/hooks/useShareToken';
 import { CalendarView } from '@/components/calendar/CalendarView';
 import { ModernPostForm } from '@/components/calendar/ModernPostForm';
 import { ClientFilters } from '@/components/calendar/ClientFilters';
@@ -19,6 +18,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Calendar, Grid, List, Plus, Filter, Share2, CheckSquare } from 'lucide-react';
 import { PostStatus, Post } from '@/types/multi-tenant';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function ClientCalendar() {
   const { organization, loading: orgLoading, hasAccess, canEdit, canManage } = useOrganization();
@@ -60,7 +60,6 @@ export default function ClientCalendar() {
   const { campaigns: privateCampaigns } = useCampaigns(organization?.id);
   const { clients: privateClients } = useClients(organization?.id);
   const { companies: privateCompanies } = useCompanies(selectedClient || undefined);
-  const { generatePublicLink, loading: shareLoading } = useShareToken(organization?.id);
 
   // Use public or private data based on view mode
   const currentOrg = isPublicView ? publicData?.organization : organization;
@@ -82,7 +81,7 @@ export default function ClientCalendar() {
   const filterPosts = (allPosts: Post[]) => {
     return allPosts.filter(post => {
       // Filter by media type
-      if (mediaType && post.media_type !== mediaType) {
+      if (mediaType && mediaType !== 'all' && post.media_type !== mediaType) {
         return false;
       }
 
@@ -122,7 +121,7 @@ export default function ClientCalendar() {
     setSelectedClient('');
     setSelectedCompany('');
     setSelectedResponsibility('');
-    setMediaType('');
+    setMediaType('all');
     setContentQuery('');
     setStartDate(undefined);
     setEndDate(undefined);
@@ -206,7 +205,35 @@ export default function ClientCalendar() {
   };
 
   const handleGenerateLink = async () => {
-    await generatePublicLink();
+    if (!organization?.id) {
+      toast({
+        title: 'Erro',
+        description: 'ID da organização não encontrado',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .rpc('generate_share_token', { target_org_id: organization.id });
+
+      if (error) throw error;
+
+      const publicUrl = `${window.location.origin}/public/calendar?share=${data}`;
+      await navigator.clipboard.writeText(publicUrl);
+      
+      toast({
+        title: 'Link copiado!',
+        description: 'O link público foi copiado para a área de transferência.',
+      });
+    } catch (err) {
+      toast({
+        title: 'Erro ao gerar link',
+        description: err instanceof Error ? err.message : 'Erro desconhecido',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleBulkDelete = async (postIds: string[]) => {
@@ -270,10 +297,9 @@ export default function ClientCalendar() {
                   variant="outline" 
                   size="sm" 
                   onClick={handleGenerateLink}
-                  disabled={shareLoading}
                 >
                   <Share2 className="h-4 w-4 mr-2" />
-                  {shareLoading ? 'Gerando...' : 'Gerar Link Público'}
+                  Gerar Link Público
                 </Button>
               )}
               <ThemeToggle />
