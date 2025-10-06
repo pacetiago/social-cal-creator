@@ -78,6 +78,56 @@ export default function ClientCalendar() {
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [defaultDate, setDefaultDate] = useState<Date | undefined>();
 
+  // Filter posts client-side
+  const filterPosts = (allPosts: Post[]) => {
+    return allPosts.filter(post => {
+      // Filter by media type
+      if (mediaType && post.media_type !== mediaType) {
+        return false;
+      }
+
+      // Filter by content query (search in title and content)
+      if (contentQuery) {
+        const query = contentQuery.toLowerCase();
+        const titleMatch = post.title?.toLowerCase().includes(query);
+        const contentMatch = post.content?.toLowerCase().includes(query);
+        if (!titleMatch && !contentMatch) {
+          return false;
+        }
+      }
+
+      // Filter by start date
+      if (startDate && post.publish_at) {
+        const postDate = new Date(post.publish_at);
+        if (postDate < startDate) {
+          return false;
+        }
+      }
+
+      // Filter by end date
+      if (endDate && post.publish_at) {
+        const postDate = new Date(post.publish_at);
+        if (postDate > endDate) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  };
+
+  const filteredPosts = filterPosts(posts);
+
+  const clearFilters = () => {
+    setSelectedClient('');
+    setSelectedCompany('');
+    setSelectedResponsibility('');
+    setMediaType('');
+    setContentQuery('');
+    setStartDate(undefined);
+    setEndDate(undefined);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -201,6 +251,16 @@ export default function ClientCalendar() {
                 <List className="h-4 w-4 mr-2" />
                 Lista
               </Button>
+              {!isPublicView && canEdit && (
+                <Button 
+                  variant={showSelection ? 'default' : 'outline'} 
+                  size="sm" 
+                  onClick={() => setShowSelection(!showSelection)}
+                >
+                  <CheckSquare className="h-4 w-4 mr-2" />
+                  Seleção em Massa
+                </Button>
+              )}
               <Button variant="outline" size="sm" onClick={() => setShowFilters(!showFilters)}>
                 <Filter className="h-4 w-4 mr-2" />
                 Filtros
@@ -240,7 +300,7 @@ export default function ClientCalendar() {
                   <Grid className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{posts.length}</div>
+                  <div className="text-2xl font-bold">{filteredPosts.length}</div>
                   <p className="text-xs text-muted-foreground">Posts nesta organização</p>
                 </CardContent>
               </Card>
@@ -252,7 +312,7 @@ export default function ClientCalendar() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {posts.filter(p => p.status === 'published').length}
+                    {filteredPosts.filter(p => p.status === 'published').length}
                   </div>
                   <p className="text-xs text-muted-foreground">Posts já publicados</p>
                 </CardContent>
@@ -265,7 +325,7 @@ export default function ClientCalendar() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {posts.filter(p => p.status === 'scheduled').length}
+                    {filteredPosts.filter(p => p.status === 'scheduled').length}
                   </div>
                   <p className="text-xs text-muted-foreground">Posts agendados</p>
                 </CardContent>
@@ -278,7 +338,7 @@ export default function ClientCalendar() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {posts.filter(p => p.status === 'review').length}
+                    {filteredPosts.filter(p => p.status === 'review').length}
                   </div>
                   <p className="text-xs text-muted-foreground">Aguardando aprovação</p>
                 </CardContent>
@@ -296,7 +356,7 @@ export default function ClientCalendar() {
                 </CardHeader>
                 <CardContent>
                   <PostSelection
-                    posts={posts}
+                    posts={filteredPosts}
                     onBulkDelete={handleBulkDelete}
                     onBulkApprove={handleBulkApprove}
                     onCancel={() => setShowSelection(false)}
@@ -313,7 +373,7 @@ export default function ClientCalendar() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {posts.map((post) => (
+                    {filteredPosts.map((post) => (
                       <div key={post.id} className="flex items-center justify-between p-4 border rounded-lg">
                         <div className="flex-1">
                           <h3 className="font-medium">{post.title}</h3>
@@ -344,7 +404,7 @@ export default function ClientCalendar() {
                       </div>
                     ))}
 
-                    {posts.length === 0 && (
+                    {filteredPosts.length === 0 && (
                       <div className="text-center py-8 text-muted-foreground">
                         <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
                         <p>Nenhum post encontrado.</p>
@@ -361,7 +421,7 @@ export default function ClientCalendar() {
               </Card>
             ) : (
               <CalendarView
-                posts={posts}
+                posts={filteredPosts}
                 onPostClick={handlePostClick}
                 onCreatePost={!isPublicView && canEdit ? handleCreatePost : undefined}
                 canEdit={!isPublicView && canEdit}
@@ -378,9 +438,20 @@ export default function ClientCalendar() {
                   selectedClient={selectedClient}
                   selectedCompany={selectedCompany}
                   selectedResponsibility={selectedResponsibility}
+                  mediaType={mediaType}
+                  contentQuery={contentQuery}
+                  startDate={startDate}
+                  endDate={endDate}
                   onClientChange={setSelectedClient}
                   onCompanyChange={setSelectedCompany}
                   onResponsibilityChange={setSelectedResponsibility}
+                  onMediaTypeChange={setMediaType}
+                  onContentQueryChange={setContentQuery}
+                  onDateRangeChange={(start, end) => {
+                    setStartDate(start);
+                    setEndDate(end);
+                  }}
+                  onClear={clearFilters}
                   clients={clients || []}
                   companies={companies || []}
                 />
