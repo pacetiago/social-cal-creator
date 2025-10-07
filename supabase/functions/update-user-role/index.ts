@@ -1,97 +1,152 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts"
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+};
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response('ok', { headers: corsHeaders });
   }
 
   try {
-    // Create a Supabase admin client  
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    
-    const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2')
-    
-    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
-      auth: { autoRefreshToken: false, persistSession: false }
-    })
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
+        },
+      }
+    );
 
-    // Get the authorization header from the request
-    const authHeader = req.headers.get('Authorization')
-    if (!authHeader) {
-      throw new Error('No authorization header')
-    }
-
-    // Verify the user making the request
     const supabaseClient = createClient(
-      supabaseUrl,
-      Deno.env.get('SUPABASE_ANON_KEY')!
-    )
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      {
+        global: {
+          headers: { Authorization: req.headers.get('Authorization')! },
+        },
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
+        },
+      }
+    );
 
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(
-      authHeader.replace('Bearer ', '')
-    )
-
-    if (authError || !user) {
-      throw new Error('Unauthorized')
+    // Get the authenticated user
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+    
+    if (userError || !user) {
+      console.error('Authentication error:', userError);
+      return new Response(
+        JSON.stringify({ error: 'Not authenticated' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    // Get request body
-    const { userId, role } = await req.json()
+    console.log('Authenticated user:', user.id);
+
+    const { userId, role } = await req.json();
 
     if (!userId || !role) {
-      throw new Error('User ID and role are required')
+      return new Response(
+        JSON.stringify({ error: 'Missing userId or role' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    // SECURITY: Check if the user has platform admin permissions
-    const { data: hasAdminRole, error: roleCheckError } = await supabaseAdmin
-      .rpc('has_platform_role', { 
-        _user_id: user.id, 
-        _role: 'platform_admin' 
-      })
+    console.log('Updating role for user:', userId, 'to:', role);
 
-    if (roleCheckError || !hasAdminRole) {
-      throw new Error('Unauthorized: Platform admin privileges required')
+    // Check if the requesting user is a platform admin or owner
+    const { data: isPlatformAdmin, error: roleCheckError } = await supabaseClient.rpc(
+      'has_platform_role',
+      { _user_id: user.id, _role: 'platform_admin' }
+    );
+
+    const { data: isPlatformOwner } = await supabaseClient.rpc(
+      'has_platform_role',
+      { _user_id: user.id, _role: 'platform_owner' }
+    );
+
+    if (roleCheckError) {
+      console.error('Role check error:', roleCheckError);
+      return new Response(
+        JSON.stringify({ error: 'Failed to verify permissions' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    // SECURITY: Prevent self-modification
+    if (!isPlatformAdmin && !isPlatformOwner) {
+      console.error('User is not platform admin or owner');
+      return new Response(
+        JSON.stringify({ error: 'Insufficient permissions' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Prevent users from changing their own role
     if (userId === user.id) {
-      throw new Error('Cannot modify your own role')
+      return new Response(
+        JSON.stringify({ error: 'Cannot modify your own role' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    // Update the user's role in the profiles table (kept for backward compatibility)
-    const { error: updateError } = await supabaseAdmin
-      .from('profiles')
-      .update({ role })
-      .eq('id', userId)
-
-    if (updateError) {
-      throw updateError
+    // Only platform owners can create other owners
+    if (role === 'platform_owner' && !isPlatformOwner) {
+      return new Response(
+        JSON.stringify({ error: 'Only platform owners can assign owner role' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
+
+    // Update user role in user_roles table
+    // First, delete existing role
+    const { error: deleteError } = await supabaseAdmin
+      .from('user_roles')
+      .delete()
+      .eq('user_id', userId);
+
+    if (deleteError) {
+      console.error('Error deleting old role:', deleteError);
+      return new Response(
+        JSON.stringify({ error: 'Failed to delete old role' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Then, insert new role
+    const { error: insertError } = await supabaseAdmin
+      .from('user_roles')
+      .insert({
+        user_id: userId,
+        role: role,
+        created_by: user.id
+      });
+
+    if (insertError) {
+      console.error('Error inserting new role:', insertError);
+      return new Response(
+        JSON.stringify({ error: 'Failed to insert new role' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log('Role updated successfully');
 
     return new Response(
       JSON.stringify({ success: true }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
-      },
-    )
-
-  } catch (error) {
-    console.error('Error:', error)
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  } catch (error: any) {
+    console.error('Unexpected error:', error);
     return new Response(
-      JSON.stringify({ error: errorMessage }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400,
-      },
-    )
+      JSON.stringify({ error: error.message }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
   }
-})
+});

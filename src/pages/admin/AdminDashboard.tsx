@@ -1,11 +1,19 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Building2, Users, BarChart3, Shield } from 'lucide-react';
 import { AdminLayout } from '@/components/AdminLayout';
+import { BulkImport } from '@/components/admin/BulkImport';
+import { useOrganizations } from '@/hooks/useOrganizations';
+import { useState } from 'react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 
 export default function AdminDashboard() {
+  const { organizations } = useOrganizations();
+  const [selectedOrgId, setSelectedOrgId] = useState<string>('');
+
   // Mock data - replace with real dashboard data
   const stats = {
-    totalOrgs: 2,
+    totalOrgs: organizations.length,
     totalUsers: 13,
     totalPosts: 68,
     activeUsers: 8
@@ -146,6 +154,27 @@ export default function AdminDashboard() {
               </div>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Bulk Import Section */}
+        <div className="mt-8">
+          <div className="mb-4">
+            <Label htmlFor="org-select">Selecione uma Organização para Importação</Label>
+            <Select value={selectedOrgId} onValueChange={setSelectedOrgId}>
+              <SelectTrigger id="org-select" className="max-w-md">
+                <SelectValue placeholder="Selecione uma organização..." />
+              </SelectTrigger>
+              <SelectContent>
+                {organizations.map((org) => (
+                  <SelectItem key={org.id} value={org.id}>
+                    {org.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {selectedOrgId && <BulkImport orgId={selectedOrgId} />}
         </div>
       </div>
     </AdminLayout>

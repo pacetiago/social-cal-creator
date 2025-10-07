@@ -248,7 +248,9 @@ export default function AdminUsers() {
                       </SelectTrigger>
                        <SelectContent>
                         <SelectItem value="user">Usuário</SelectItem>
-                        <SelectItem value="platform_admin">Administrador da Plataforma</SelectItem>
+                        <SelectItem value="platform_viewer">Visualizador</SelectItem>
+                        <SelectItem value="platform_admin">Administrador</SelectItem>
+                        <SelectItem value="platform_owner">Proprietário</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -353,7 +355,9 @@ export default function AdminUsers() {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="user">Usuário</SelectItem>
-                          <SelectItem value="platform_admin">Admin Plataforma</SelectItem>
+                          <SelectItem value="platform_viewer">Visualizador</SelectItem>
+                          <SelectItem value="platform_admin">Administrador</SelectItem>
+                          <SelectItem value="platform_owner">Proprietário</SelectItem>
                         </SelectContent>
                       </Select>
                     </TableCell>

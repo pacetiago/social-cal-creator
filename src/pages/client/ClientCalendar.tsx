@@ -15,7 +15,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Calendar, Grid, List, Plus, Filter, Share2, CheckSquare } from 'lucide-react';
+import { Calendar, Grid, List, Plus, Filter, CheckSquare } from 'lucide-react';
 import { PostStatus, Post } from '@/types/multi-tenant';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { supabase } from '@/integrations/supabase/client';
@@ -204,37 +204,6 @@ export default function ClientCalendar() {
     setShowPostForm(false);
   };
 
-  const handleGenerateLink = async () => {
-    if (!organization?.id) {
-      toast({
-        title: 'Erro',
-        description: 'ID da organização não encontrado',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    try {
-      const { data, error } = await supabase
-        .rpc('generate_share_token', { target_org_id: organization.id });
-
-      if (error) throw error;
-
-      const publicUrl = `${window.location.origin}/public/calendar?share=${data}`;
-      await navigator.clipboard.writeText(publicUrl);
-      
-      toast({
-        title: 'Link copiado!',
-        description: 'O link público foi copiado para a área de transferência.',
-      });
-    } catch (err) {
-      toast({
-        title: 'Erro ao gerar link',
-        description: err instanceof Error ? err.message : 'Erro desconhecido',
-        variant: 'destructive',
-      });
-    }
-  };
 
   const handleBulkDelete = async (postIds: string[]) => {
     for (const postId of postIds) {
@@ -292,16 +261,6 @@ export default function ClientCalendar() {
                 <Filter className="h-4 w-4 mr-2" />
                 Filtros
               </Button>
-              {!isPublicView && canManage && (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={handleGenerateLink}
-                >
-                  <Share2 className="h-4 w-4 mr-2" />
-                  Gerar Link Público
-                </Button>
-              )}
               <ThemeToggle />
               {!isPublicView && canEdit && (
                 <Button onClick={() => handleCreatePost()}>

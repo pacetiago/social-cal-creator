@@ -525,6 +525,7 @@ export type Database = {
       }
       posts: {
         Row: {
+          attachments: Json | null
           campaign_id: string | null
           channel_id: string | null
           client_id: string | null
@@ -553,6 +554,7 @@ export type Database = {
           variations: Json | null
         }
         Insert: {
+          attachments?: Json | null
           campaign_id?: string | null
           channel_id?: string | null
           client_id?: string | null
@@ -581,6 +583,7 @@ export type Database = {
           variations?: Json | null
         }
         Update: {
+          attachments?: Json | null
           campaign_id?: string | null
           channel_id?: string | null
           client_id?: string | null
@@ -772,6 +775,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      is_platform_owner: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       user_has_org_access: {
         Args: { target_org_id: string }
         Returns: boolean
@@ -805,7 +812,11 @@ export type Database = {
         | "Post/Fotos"
         | "Reels"
         | "Story"
-      platform_role: "platform_admin" | "user"
+      platform_role:
+        | "platform_admin"
+        | "user"
+        | "platform_owner"
+        | "platform_viewer"
       post_responsibility: "client" | "agency"
       post_status:
         | "idea"
@@ -970,7 +981,12 @@ export const Constants = {
         "Reels",
         "Story",
       ],
-      platform_role: ["platform_admin", "user"],
+      platform_role: [
+        "platform_admin",
+        "user",
+        "platform_owner",
+        "platform_viewer",
+      ],
       post_responsibility: ["client", "agency"],
       post_status: [
         "idea",

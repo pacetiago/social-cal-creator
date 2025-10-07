@@ -89,3 +89,9 @@ verify_jwt = false
 
 [functions.rate-limit]
 verify_jwt = false
+
+[functions.update-user-role]
+verify_jwt = true
+
+[functions.bulk-import-posts]
+verify_jwt = true
