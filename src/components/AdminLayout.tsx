@@ -19,6 +19,12 @@ interface AdminLayoutProps {
 
 const navigation = [
   {
+    name: 'Dashboard',
+    href: '/admin',
+    icon: Building2,
+    description: 'Painel administrativo e importação em massa'
+  },
+  {
     name: 'Organizações',
     href: '/admin/orgs',
     icon: Building2,

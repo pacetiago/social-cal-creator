@@ -82,7 +82,7 @@ export const createUserSchema = z.object({
   email: emailSchema,
   password: passwordSchema,
   full_name: nameSchema,
-  role: z.enum(['user', 'admin', 'platform_admin'], {
+  role: z.enum(['user', 'platform_viewer', 'platform_admin', 'platform_owner'], {
     errorMap: () => ({ message: 'Role deve ser selecionada' }),
   }),
 });

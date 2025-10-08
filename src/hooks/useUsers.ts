@@ -29,7 +29,7 @@ export function useUsers() {
         .select('role')
         .eq('user_id', user?.id);
 
-      const isPlatformAdmin = userRoles?.some(r => r.role === 'platform_admin');
+      const isPlatformAdmin = userRoles?.some(r => r.role === 'platform_admin' || r.role === 'platform_owner');
 
       // If user is platform admin, use edge function to get all users
       if (isPlatformAdmin) {
@@ -70,7 +70,7 @@ export function useUsers() {
     }
   };
 
-  const updateUserRole = async (userId: string, newRole: 'platform_admin' | 'user') => {
+  const updateUserRole = async (userId: string, newRole: 'platform_owner' | 'platform_admin' | 'platform_viewer' | 'user') => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Not authenticated');

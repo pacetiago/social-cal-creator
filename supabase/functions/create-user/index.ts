@@ -42,15 +42,21 @@ serve(async (req) => {
       throw new Error('Unauthorized')
     }
 
-    // Check if the user has platform_admin role
+    // Check if the user has platform_admin or platform_owner role
     const { data: isPlatformAdmin } = await supabaseAdmin
       .rpc('has_platform_role', { 
         _user_id: user.id, 
         _role: 'platform_admin' 
       })
 
-    if (!isPlatformAdmin) {
-      throw new Error('Insufficient permissions - platform_admin role required')
+    const { data: isPlatformOwner } = await supabaseAdmin
+      .rpc('has_platform_role', { 
+        _user_id: user.id, 
+        _role: 'platform_owner' 
+      })
+
+    if (!isPlatformAdmin && !isPlatformOwner) {
+      throw new Error('Insufficient permissions - platform_admin or platform_owner role required')
     }
 
     // Get request body
@@ -72,7 +78,13 @@ serve(async (req) => {
 
     // Insert the user's role into the user_roles table
     if (newUser.user && role) {
-      const platformRole = role === 'admin' ? 'platform_admin' : 'user';
+      // Validate role permissions: only platform_owner can create platform_owner
+      if (role === 'platform_owner' && !isPlatformOwner) {
+        throw new Error('Only platform owners can create other platform owners')
+      }
+
+      // Map old 'admin' role to 'platform_admin' for backward compatibility
+      const platformRole = role === 'admin' ? 'platform_admin' : role;
       
       const { error: roleError } = await supabaseAdmin
         .from('user_roles')

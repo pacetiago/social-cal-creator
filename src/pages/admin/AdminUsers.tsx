@@ -36,7 +36,7 @@ export default function AdminUsers() {
   );
 
   const handleRoleChange = async (userId: string, newRole: string) => {
-    await updateUserRole(userId, newRole as 'platform_admin' | 'user');
+    await updateUserRole(userId, newRole as 'platform_owner' | 'platform_admin' | 'platform_viewer' | 'user');
   };
 
   const handleDeactivateUser = async (userId: string, userEmail: string) => {
@@ -282,6 +282,21 @@ export default function AdminUsers() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Proprietários</CardTitle>
+              <Badge variant="outline" className="text-purple-600">
+                Owner
+              </Badge>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {users.filter(user => user.platform_role === 'platform_owner').length}
+              </div>
+              <p className="text-xs text-muted-foreground">Proprietários da plataforma</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Administradores</CardTitle>
               <Badge variant="outline" className="text-red-600">
                 Admin
@@ -291,22 +306,7 @@ export default function AdminUsers() {
               <div className="text-2xl font-bold">
                 {users.filter(user => user.platform_role === 'platform_admin').length}
               </div>
-              <p className="text-xs text-muted-foreground">Usuários com acesso admin</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Usuários Regulares</CardTitle>
-              <Badge variant="outline" className="text-blue-600">
-                User
-              </Badge>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {users.filter(user => user.platform_role === 'user').length}
-              </div>
-              <p className="text-xs text-muted-foreground">Usuários regulares</p>
+              <p className="text-xs text-muted-foreground">Administradores da plataforma</p>
             </CardContent>
           </Card>
         </div>

@@ -13,9 +13,11 @@ import { Post, Channel, Campaign, PostStatus, MediaType } from '@/types/multi-te
 import { useClients, Client } from '@/hooks/useClients';
 import { useCompanies, Company } from '@/hooks/useCompanies';
 import { usePosts } from '@/hooks/usePosts';
-import { CalendarIcon, Save, X, Trash2 } from 'lucide-react';
+import { CalendarIcon, Save, X, Trash2, Upload } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface ModernPostFormProps {
   isOpen: boolean;
@@ -42,6 +44,7 @@ export function ModernPostForm({
   clients: clientsProp,
   onDelete
 }: ModernPostFormProps) {
+  const { toast } = useToast();
   const clientsHook = useClients(orgId);
   const clients: Client[] = (clientsProp ?? clientsHook.clients);
   const clientsLoading = clientsProp ? false : clientsHook.loading;
@@ -67,6 +70,7 @@ export function ModernPostForm({
     media_type: '' as MediaType | '',
     tags: [] as string[]
   });
+  const [attachments, setAttachments] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
 
   // Initialize form data when modal opens or initialData changes
@@ -136,7 +140,7 @@ export function ModernPostForm({
       // If multiple companies selected and creating new post, create one post per company
       if (!initialData && formData.company_ids.length > 1) {
         for (const companyId of formData.company_ids) {
-          await onSave({
+          const result = await onSave({
             title: formData.title,
             content: formData.content,
             status: formData.status,
@@ -160,10 +164,15 @@ export function ModernPostForm({
             updated_by: null,
             org_id: ''
           });
+
+          // Upload attachments for this post
+          if (result?.data?.id && attachments.length > 0) {
+            await uploadAttachments(result.data.id);
+          }
         }
       } else {
         // Single company or editing existing post
-        await onSave({
+        const result = await onSave({
           title: formData.title,
           content: formData.content,
           status: formData.status,
@@ -187,6 +196,11 @@ export function ModernPostForm({
           updated_by: null,
           org_id: ''
         });
+
+        // Upload attachments for this post
+        if (result?.data?.id && attachments.length > 0) {
+          await uploadAttachments(result.data.id);
+        }
       }
       
       handleClose();
@@ -195,7 +209,89 @@ export function ModernPostForm({
     }
   };
 
+  const uploadAttachments = async (postId: string) => {
+    if (!orgId) return;
+
+    for (const file of attachments) {
+      // Validate file size (5MB max)
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: 'Arquivo muito grande',
+          description: `${file.name} excede o limite de 5MB`,
+          variant: 'destructive',
+        });
+        continue;
+      }
+
+      try {
+        // Upload to Supabase Storage
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${postId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('post-attachments')
+          .upload(fileName, file);
+
+        if (uploadError) {
+          toast({
+            title: 'Erro no upload',
+            description: uploadError.message,
+            variant: 'destructive',
+          });
+          continue;
+        }
+
+        // Get public URL
+        const { data: { publicUrl } } = supabase.storage
+          .from('post-attachments')
+          .getPublicUrl(fileName);
+
+        // Determine asset kind based on mime type
+        let assetKind: 'image' | 'video' | 'doc' = 'image';
+        if (file.type.startsWith('video/')) assetKind = 'video';
+        else if (file.type.includes('pdf') || file.type.includes('document')) assetKind = 'doc';
+
+        // Insert into assets table
+        const { error: assetError } = await supabase
+          .from('assets')
+          .insert([{
+            org_id: orgId,
+            post_id: postId,
+            name: file.name,
+            kind: assetKind,
+            file_path: fileName,
+            file_url: publicUrl,
+            mime_type: file.type,
+            file_size: file.size,
+            metadata: {}
+          }]);
+
+        if (assetError) {
+          console.error('Error inserting asset:', assetError);
+          toast({
+            title: 'Erro ao salvar anexo',
+            description: assetError.message,
+            variant: 'destructive',
+          });
+        }
+      } catch (error) {
+        console.error('Error uploading file:', error);
+        toast({
+          title: 'Erro no upload',
+          description: 'Falha ao fazer upload do arquivo',
+          variant: 'destructive',
+        });
+      }
+    }
+
+    toast({
+      title: 'Anexos enviados',
+      description: `${attachments.length} arquivo(s) enviado(s) com sucesso`,
+    });
+  };
+
   const handleClose = () => {
+    setAttachments([]);
     onClose();
   };
 
@@ -525,6 +621,35 @@ export function ModernPostForm({
               placeholder="Insights e observações..."
               rows={4}
             />
+          </div>
+
+          <div>
+            <Label htmlFor="attachments">Anexos (máx. 5MB por arquivo)</Label>
+            <div className="space-y-2">
+              <Input
+                id="attachments"
+                type="file"
+                multiple
+                accept="image/*,video/*,.pdf,.doc,.docx"
+                onChange={(e) => {
+                  const files = Array.from(e.target.files || []);
+                  setAttachments(files);
+                }}
+                className="cursor-pointer"
+              />
+              {attachments.length > 0 && (
+                <div className="text-sm text-muted-foreground">
+                  {attachments.length} arquivo(s) selecionado(s)
+                  <ul className="list-disc list-inside mt-1">
+                    {attachments.map((file, index) => (
+                      <li key={index}>
+                        {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="flex gap-3 pt-4">
