@@ -32,6 +32,12 @@ export interface CalendarPost {
   content: string;
   responsibility: ResponsibilityType;
   insight?: string;
+  attachments?: Array<{
+    name: string;
+    url: string;
+    type: string;
+    size: number;
+  }>;
   createdAt: Date;
   updatedAt: Date;
 }

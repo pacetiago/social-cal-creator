@@ -2,6 +2,7 @@ import { useState } from "react";
 import { CalendarPost, SocialNetwork, EditorialLine, MediaType, ChannelType, Client, Company, ResponsibilityType } from "@/types/calendar";
 import { postFormSchema, sanitizeInput } from "@/lib/validation";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Dialog,
   DialogContent,
@@ -61,14 +62,14 @@ export function PostForm({ isOpen, onClose, onSave, initialData, clients, defaul
 
   const selectedClient = clients.find(c => c.id === formData.clientId);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setValidationErrors({});
     
     try {
       // Sanitize input data
       const sanitizedData = {
-        title: sanitizeInput(formData.subject), // Using subject as title for validation
+        title: sanitizeInput(formData.subject),
         content: sanitizeInput(formData.content),
         subject: sanitizeInput(formData.subject),
         insight: formData.insight ? sanitizeInput(formData.insight) : undefined,
@@ -85,6 +86,56 @@ export function PostForm({ isOpen, onClose, onSave, initialData, clients, defaul
       // Validate with Zod schema
       const validatedData = postFormSchema.parse(sanitizedData);
 
+      // Process attachments if any
+      const attachmentUrls: any[] = [];
+      if (attachments.length > 0) {
+        toast({
+          title: 'Fazendo upload...',
+          description: `Enviando ${attachments.length} arquivo(s)...`,
+        });
+
+        for (const file of attachments) {
+          // Validate file size (5MB max)
+          if (file.size > 5 * 1024 * 1024) {
+            toast({
+              title: 'Arquivo muito grande',
+              description: `${file.name} excede o limite de 5MB`,
+              variant: 'destructive',
+            });
+            continue;
+          }
+
+          // Upload to Supabase Storage
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+          
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('post-attachments')
+            .upload(fileName, file);
+
+          if (uploadError) {
+            toast({
+              title: 'Erro no upload',
+              description: uploadError.message,
+              variant: 'destructive',
+            });
+            continue;
+          }
+
+          // Get public URL
+          const { data: { publicUrl } } = supabase.storage
+            .from('post-attachments')
+            .getPublicUrl(fileName);
+
+          attachmentUrls.push({
+            name: file.name,
+            url: publicUrl,
+            type: file.type,
+            size: file.size,
+          });
+        }
+      }
+
       onSave({
         ...formData,
         subject: validatedData.subject,
@@ -95,6 +146,7 @@ export function PostForm({ isOpen, onClose, onSave, initialData, clients, defaul
         mediaType: formData.mediaType as MediaType,
         editorialLine: formData.editorialLine as EditorialLine,
         responsibility: formData.responsibility as ResponsibilityType,
+        attachments: attachmentUrls.length > 0 ? attachmentUrls : undefined,
       });
       
       handleClose();
@@ -132,6 +184,7 @@ export function PostForm({ isOpen, onClose, onSave, initialData, clients, defaul
       responsibility: 'Agência' as ResponsibilityType,
       insight: '',
     });
+    setAttachments([]);
     onClose();
   };
 
