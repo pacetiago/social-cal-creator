@@ -36,7 +36,11 @@ export default function AdminUsers() {
   );
 
   const handleRoleChange = async (userId: string, newRole: string) => {
-    await updateUserRole(userId, newRole as 'platform_owner' | 'platform_admin' | 'platform_viewer' | 'user');
+    const result = await updateUserRole(userId, newRole as 'platform_owner' | 'platform_admin' | 'platform_viewer' | 'user');
+    
+    if (!result.error) {
+      await refetch(); // Force refresh to show updated role
+    }
   };
 
   const handleDeactivateUser = async (userId: string, userEmail: string) => {

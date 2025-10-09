@@ -26,6 +26,7 @@ serve(async (req) => {
     // Get JWT from authorization header
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
+      console.error('Missing authorization header');
       return new Response(
         JSON.stringify({ error: 'Missing authorization header' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -33,11 +34,17 @@ serve(async (req) => {
     }
 
     const jwt = authHeader.replace('Bearer ', '');
+    console.log('Authorization header received');
 
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
       {
+        global: {
+          headers: {
+            Authorization: `Bearer ${jwt}`
+          }
+        },
         auth: {
           autoRefreshToken: false,
           persistSession: false,
@@ -46,7 +53,7 @@ serve(async (req) => {
     );
 
     // Get the authenticated user using the JWT
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(jwt);
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
     
     if (userError || !user) {
       console.error('Authentication error:', userError);

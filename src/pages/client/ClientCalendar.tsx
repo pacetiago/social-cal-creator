@@ -445,7 +445,7 @@ export default function ClientCalendar() {
           )}
         </div>
 
-        {!isPublicView && (
+        {!isPublicView && showPostForm && (
           <ModernPostForm
             isOpen={showPostForm}
             onClose={() => {
