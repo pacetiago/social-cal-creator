@@ -623,32 +623,71 @@ export function ModernPostForm({
             />
           </div>
 
-          <div>
-            <Label htmlFor="attachments">Anexos (máx. 5MB por arquivo)</Label>
-            <div className="space-y-2">
-              <Input
-                id="attachments"
-                type="file"
-                multiple
-                accept="image/*,video/*,.pdf,.doc,.docx"
-                onChange={(e) => {
-                  const files = Array.from(e.target.files || []);
-                  setAttachments(files);
-                }}
-                className="cursor-pointer"
-              />
-              {attachments.length > 0 && (
-                <div className="text-sm text-muted-foreground">
-                  {attachments.length} arquivo(s) selecionado(s)
-                  <ul className="list-disc list-inside mt-1">
-                    {attachments.map((file, index) => (
-                      <li key={index}>
-                        {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
-                      </li>
-                    ))}
-                  </ul>
+          <div className="space-y-3">
+            {/* Anexos já vinculados ao post */}
+            {initialData && (initialData as any).assets && (initialData as any).assets.length > 0 && (
+              <div>
+                <Label>Anexos do post</Label>
+                <div className="mt-2 grid grid-cols-1 gap-2">
+                  {(initialData as any).assets.map((asset: any) => (
+                    <div key={asset.id} className="flex items-center justify-between rounded-md border bg-card p-2">
+                      <div className="flex items-center gap-3 min-w-0">
+                        {asset.kind === 'image' && asset.file_url ? (
+                          <img src={asset.file_url} alt={asset.name || 'anexo'} className="h-10 w-10 rounded object-cover" loading="lazy" />
+                        ) : (
+                          <div className="h-10 w-10 rounded bg-muted flex items-center justify-center text-xs">{asset.kind?.toUpperCase() || 'FILE'}</div>
+                        )}
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium truncate">{asset.name}</p>
+                          {asset.mime_type && (
+                            <p className="text-xs text-muted-foreground truncate">{asset.mime_type}</p>
+                          )}
+                        </div>
+                      </div>
+                      {asset.file_url && (
+                        <a
+                          href={asset.file_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm underline whitespace-nowrap"
+                        >
+                          Baixar
+                        </a>
+                      )}
+                    </div>
+                  ))}
                 </div>
-              )}
+              </div>
+            )}
+
+            {/* Upload de novos anexos */}
+            <div>
+              <Label htmlFor="attachments">Adicionar anexos (máx. 5MB por arquivo)</Label>
+              <div className="space-y-2">
+                <Input
+                  id="attachments"
+                  type="file"
+                  multiple
+                  accept="image/*,video/*,.pdf,.doc,.docx"
+                  onChange={(e) => {
+                    const files = Array.from(e.target.files || []);
+                    setAttachments(files);
+                  }}
+                  className="cursor-pointer"
+                />
+                {attachments.length > 0 && (
+                  <div className="text-sm text-muted-foreground">
+                    {attachments.length} arquivo(s) selecionado(s)
+                    <ul className="list-disc list-inside mt-1">
+                      {attachments.map((file, index) => (
+                        <li key={index}>
+                          {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 

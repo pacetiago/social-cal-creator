@@ -15,10 +15,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Calendar, Grid, List, Plus, Filter, CheckSquare } from 'lucide-react';
+import { Calendar, Grid, List, Plus, Filter, CheckSquare, FileSpreadsheet } from 'lucide-react';
 import { PostStatus, Post } from '@/types/multi-tenant';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { supabase } from '@/integrations/supabase/client';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { BulkImport } from '@/components/admin/BulkImport';
 
 export default function ClientCalendar() {
   const { organization, loading: orgLoading, hasAccess, canEdit, canManage } = useOrganization();
@@ -50,7 +52,7 @@ export default function ClientCalendar() {
   });
 
   // Private calendar data (authenticated users)
-  const { posts: privatePosts, loading: postsLoading, addPost, updatePost, deletePost } = usePosts({
+  const { posts: privatePosts, loading: postsLoading, addPost, updatePost, deletePost, refetch } = usePosts({
     orgId: organization?.id,
     clientId: selectedClient || undefined,
     companyId: selectedCompany || undefined,
@@ -76,6 +78,7 @@ export default function ClientCalendar() {
   const [showSelection, setShowSelection] = useState(false);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [defaultDate, setDefaultDate] = useState<Date | undefined>();
+  const [showImport, setShowImport] = useState(false);
 
   // Filter posts client-side
   const filterPosts = (allPosts: Post[]) => {
@@ -262,6 +265,12 @@ export default function ClientCalendar() {
                 Filtros
               </Button>
               <ThemeToggle />
+              {!isPublicView && canManage && (
+                <Button variant="outline" size="sm" onClick={() => setShowImport(true)}>
+                  <FileSpreadsheet className="h-4 w-4 mr-2" />
+                  Importar Planilha
+                </Button>
+              )}
               {!isPublicView && canEdit && (
                 <Button onClick={() => handleCreatePost()}>
                   <Plus className="h-4 w-4 mr-2" />
@@ -452,6 +461,8 @@ export default function ClientCalendar() {
               setShowPostForm(false);
               setSelectedPost(null);
               setDefaultDate(undefined);
+              // Recarrega posts para refletir anexos recém-enviados
+              refetch();
             }}
             onSave={handleSavePost}
             initialData={selectedPost}
@@ -463,6 +474,16 @@ export default function ClientCalendar() {
             onDelete={handleDeletePost}
           />
         )}
+
+        {/* Importação via Planilha */}
+        <Dialog open={showImport} onOpenChange={setShowImport}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Importar posts via planilha</DialogTitle>
+            </DialogHeader>
+            <BulkImport orgId={organization?.id} />
+          </DialogContent>
+        </Dialog>
       </main>
     </div>
   );
