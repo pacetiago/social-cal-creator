@@ -72,7 +72,40 @@ export function ModernPostForm({
   });
   const [attachments, setAttachments] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
+  const [assetUrls, setAssetUrls] = useState<Record<string, string>>({});
 
+  // Gera URLs assinadas para anexos existentes (bucket privado)
+  useEffect(() => {
+    const loadUrls = async () => {
+      const assets = (initialData as any)?.assets as any[] | undefined;
+      if (!assets || assets.length === 0) {
+        setAssetUrls({});
+        return;
+      }
+      const map: Record<string, string> = {};
+      for (const asset of assets) {
+        try {
+          if (asset.file_path) {
+            const { data, error } = await supabase.storage
+              .from('post-attachments')
+              .createSignedUrl(asset.file_path, 60 * 60); // 1 hora
+            if (!error && data?.signedUrl) {
+              map[asset.id] = data.signedUrl;
+            } else if (asset.file_url) {
+              map[asset.id] = asset.file_url;
+            }
+          } else if (asset.file_url) {
+            map[asset.id] = asset.file_url;
+          }
+        } catch (e) {
+          // fallback para file_url se existir
+          if (asset.file_url) map[asset.id] = asset.file_url;
+        }
+      }
+      setAssetUrls(map);
+    };
+    loadUrls();
+  }, [initialData]);
   // Initialize form data when modal opens or initialData changes
   useEffect(() => {
     if (isOpen) {
@@ -632,8 +665,8 @@ export function ModernPostForm({
                   {(initialData as any).assets.map((asset: any) => (
                     <div key={asset.id} className="flex items-center justify-between rounded-md border bg-card p-2">
                       <div className="flex items-center gap-3 min-w-0">
-                        {asset.kind === 'image' && asset.file_url ? (
-                          <img src={asset.file_url} alt={asset.name || 'anexo'} className="h-10 w-10 rounded object-cover" loading="lazy" />
+                        {asset.kind === 'image' && (assetUrls[asset.id] || asset.file_url) ? (
+                          <img src={assetUrls[asset.id] || asset.file_url} alt={asset.name || 'anexo'} className="h-10 w-10 rounded object-cover" loading="lazy" />
                         ) : (
                           <div className="h-10 w-10 rounded bg-muted flex items-center justify-center text-xs">{asset.kind?.toUpperCase() || 'FILE'}</div>
                         )}
@@ -644,9 +677,9 @@ export function ModernPostForm({
                           )}
                         </div>
                       </div>
-                      {asset.file_url && (
+                      {(assetUrls[asset.id] || asset.file_url) && (
                         <a
-                          href={asset.file_url}
+                          href={assetUrls[asset.id] || asset.file_url}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-sm underline whitespace-nowrap"

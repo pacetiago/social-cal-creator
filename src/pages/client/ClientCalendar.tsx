@@ -199,11 +199,14 @@ export default function ClientCalendar() {
     } else {
       await addPost(postData);
     }
+    // Recarrega posts para refletir anexos/importações
+    await refetch();
     setShowPostForm(false);
   };
 
   const handleDeletePost = async (postId: string) => {
     await deletePost(postId);
+    await refetch();
     setShowPostForm(false);
   };
 
@@ -476,7 +479,13 @@ export default function ClientCalendar() {
         )}
 
         {/* Importação via Planilha */}
-        <Dialog open={showImport} onOpenChange={setShowImport}>
+        <Dialog open={showImport} onOpenChange={(open) => {
+          setShowImport(open);
+          if (!open) {
+            // Recarrega posts ao fechar o modal de importação
+            refetch();
+          }
+        }}>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Importar posts via planilha</DialogTitle>

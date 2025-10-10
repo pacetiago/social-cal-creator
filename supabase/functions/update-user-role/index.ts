@@ -1,72 +1,49 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.4';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-serve(async (req) => {
+Deno.serve(async (req) => {
+  // CORS preflight
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false,
-        },
-      }
-    );
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
+    const anonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
+    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 
-    // Get JWT from authorization header
+    // Service role client for privileged operations (bypasses RLS)
+    const supabaseAdmin = createClient(supabaseUrl, serviceKey);
+
+    // Require Authorization header
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      console.error('Missing authorization header');
       return new Response(
         JSON.stringify({ error: 'Missing authorization header' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const jwt = authHeader.replace('Bearer ', '');
-    console.log('Authorization header received');
+    // User-scoped client to read the calling user from the JWT
+    const userSupabase = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
 
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        global: {
-          headers: {
-            Authorization: `Bearer ${jwt}`
-          }
-        },
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false,
-        },
-      }
-    );
-
-    // Get the authenticated user using the JWT
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
-    
+    const { data: { user }, error: userError } = await userSupabase.auth.getUser();
     if (userError || !user) {
-      console.error('Authentication error:', userError);
+      console.error('update-user-role: auth failed', userError);
       return new Response(
         JSON.stringify({ error: 'Not authenticated' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log('Authenticated user:', user.id);
-
     const { userId, role } = await req.json();
-
     if (!userId || !role) {
       return new Response(
         JSON.stringify({ error: 'Missing userId or role' }),
@@ -74,36 +51,31 @@ serve(async (req) => {
       );
     }
 
-    console.log('Updating role for user:', userId, 'to:', role);
-
-    // Check if the requesting user is a platform admin or owner
-    const { data: isPlatformAdmin, error: roleCheckError } = await supabaseClient.rpc(
-      'has_platform_role',
-      { _user_id: user.id, _role: 'platform_admin' }
-    );
-
-    const { data: isPlatformOwner } = await supabaseClient.rpc(
-      'has_platform_role',
-      { _user_id: user.id, _role: 'platform_owner' }
-    );
-
-    if (roleCheckError) {
-      console.error('Role check error:', roleCheckError);
+    // Permission checks using SECURITY DEFINER function via service client
+    const { data: isAdmin, error: adminCheckErr } = await supabaseAdmin.rpc('has_platform_role', {
+      _user_id: user.id,
+      _role: 'platform_admin',
+    });
+    if (adminCheckErr) {
+      console.error('update-user-role: admin check failed', adminCheckErr);
       return new Response(
         JSON.stringify({ error: 'Failed to verify permissions' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    if (!isPlatformAdmin && !isPlatformOwner) {
-      console.error('User is not platform admin or owner');
+    const { data: isOwner } = await supabaseAdmin.rpc('has_platform_role', {
+      _user_id: user.id,
+      _role: 'platform_owner',
+    });
+
+    if (!isAdmin && !isOwner) {
       return new Response(
         JSON.stringify({ error: 'Insufficient permissions' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Prevent users from changing their own role
     if (userId === user.id) {
       return new Response(
         JSON.stringify({ error: 'Cannot modify your own role' }),
@@ -111,54 +83,45 @@ serve(async (req) => {
       );
     }
 
-    // Only platform owners can create other owners
-    if (role === 'platform_owner' && !isPlatformOwner) {
+    if (role === 'platform_owner' && !isOwner) {
       return new Response(
         JSON.stringify({ error: 'Only platform owners can assign owner role' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Update user role in user_roles table
-    // First, delete existing role
-    const { error: deleteError } = await supabaseAdmin
+    // Update role: delete existing then insert new (service client bypasses RLS)
+    const { error: delErr } = await supabaseAdmin
       .from('user_roles')
       .delete()
       .eq('user_id', userId);
-
-    if (deleteError) {
-      console.error('Error deleting old role:', deleteError);
+    if (delErr) {
+      console.error('update-user-role: delete old role failed', delErr);
       return new Response(
         JSON.stringify({ error: 'Failed to delete old role' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Then, insert new role
-    const { error: insertError } = await supabaseAdmin
-      .from('user_roles')
-      .insert({
-        user_id: userId,
-        role: role,
-        created_by: user.id
-      });
-
-    if (insertError) {
-      console.error('Error inserting new role:', insertError);
+    const { error: insErr } = await supabaseAdmin.from('user_roles').insert({
+      user_id: userId,
+      role,
+      created_by: user.id,
+    });
+    if (insErr) {
+      console.error('update-user-role: insert new role failed', insErr);
       return new Response(
         JSON.stringify({ error: 'Failed to insert new role' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log('Role updated successfully');
-
     return new Response(
       JSON.stringify({ success: true }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error: any) {
-    console.error('Unexpected error:', error);
+    console.error('update-user-role: unexpected error', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
