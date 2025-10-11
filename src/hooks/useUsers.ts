@@ -35,9 +35,12 @@ export function useUsers() {
       if (isPlatformAdmin) {
         console.log('Platform admin user detected, fetching all users via edge function');
         
-        const { data: functionData, error: functionError } = await supabase.functions.invoke('list-users', {
-          body: {}
-        });
+        const { data: { session } } = await supabase.auth.getSession();
+        const invokeOptions: any = session
+          ? { body: {}, headers: { Authorization: `Bearer ${session.access_token}` } }
+          : { body: {} };
+        
+        const { data: functionData, error: functionError } = await supabase.functions.invoke('list-users', invokeOptions);
 
         if (functionError) {
           console.error('Edge function error:', functionError);
@@ -76,7 +79,8 @@ export function useUsers() {
       if (!session) throw new Error('Not authenticated');
 
       const { data, error } = await supabase.functions.invoke('update-user-role', {
-        body: { userId, role: newRole }
+        body: { userId, role: newRole },
+        headers: { Authorization: `Bearer ${session.access_token}` }
       });
 
       if (error) {

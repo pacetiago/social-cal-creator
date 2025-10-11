@@ -155,7 +155,6 @@ serve(async (req) => {
             client_id: client.id,
             company_id: company?.id || null,
             channel_id: channel?.id || null,
-            channel_ids: channel ? [channel.id] : [],
             title: row['Assunto'] || row['SUBJECT'] || row['assunto'] || 'Post Importado',
             content: row['Conteúdo'] || row['CONTENT'] || row['conteudo'] || '',
             publish_at: publishAt?.toISOString() || null,

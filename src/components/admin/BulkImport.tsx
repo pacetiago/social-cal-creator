@@ -66,13 +66,25 @@ export function BulkImport({ orgId }: { orgId?: string }) {
         setProgress(30);
 
         // Call edge function to process the spreadsheet
-        const { data, error } = await supabase.functions.invoke('bulk-import-posts', {
-          body: {
-            file: base64.split(',')[1], // Remove data:*/*;base64, prefix
-            filename: file.name,
-            orgId: orgId
-          }
-        });
+        const { data: { session } } = await supabase.auth.getSession();
+        const invokeOptions: any = session
+          ? {
+              body: {
+                file: base64.split(',')[1], // Remove data:*/*;base64, prefix
+                filename: file.name,
+                orgId: orgId
+              },
+              headers: { Authorization: `Bearer ${session.access_token}` }
+            }
+          : {
+              body: {
+                file: base64.split(',')[1],
+                filename: file.name,
+                orgId: orgId
+              }
+            };
+
+        const { data, error } = await supabase.functions.invoke('bulk-import-posts', invokeOptions);
 
         setProgress(100);
 

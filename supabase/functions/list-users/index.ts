@@ -88,10 +88,28 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log('list-users: Successfully fetched', profiles?.length || 0, 'profiles');
+    // Fetch platform roles and merge into profiles
+    const { data: roles, error: rolesError } = await supabase
+      .from('user_roles')
+      .select('user_id, role');
+
+    if (rolesError) {
+      console.error('list-users: Failed to fetch roles', rolesError);
+      return new Response(
+        JSON.stringify({ error: 'Failed to fetch roles' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const users = (profiles || []).map((p: any) => ({
+      ...p,
+      platform_role: roles?.find((r: any) => r.user_id === p.id)?.role || 'user',
+    }));
+
+    console.log('list-users: Successfully fetched', users.length, 'profiles');
 
     return new Response(
-      JSON.stringify({ users: profiles || [] }),
+      JSON.stringify({ users }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 

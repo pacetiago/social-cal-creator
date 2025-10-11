@@ -219,6 +219,9 @@ export function CalendarView({ posts, onPostClick, onCreatePost, canEdit, channe
                           {(post as any).client.name}
                         </span>
                       )}
+                      {(post as any).assets && Array.isArray((post as any).assets) && (post as any).assets.length > 0 && (
+                        <span className="text-xs" title="Anexos">📎 {(post as any).assets.length}</span>
+                      )}
                     </div>
                   </div>
                 ))}
