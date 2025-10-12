@@ -54,6 +54,12 @@ const navigation = [
     icon: Users,
     description: 'Gerenciar usuários da plataforma'
   },
+  {
+    name: 'Gerenciador de Cargos',
+    href: '/admin/roles',
+    icon: Users,
+    description: 'Visão geral de roles e permissões'
+  },
 ];
 
 export function AdminLayout({ children }: AdminLayoutProps) {

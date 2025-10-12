@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { Post, PostStatus } from '@/types/multi-tenant';
 import { cn } from '@/lib/utils';
 import { PostsModal } from './PostsModal';
+import { AttachmentPopover } from './AttachmentPopover';
 
 interface CalendarViewProps {
   posts: Post[];
@@ -220,7 +221,7 @@ export function CalendarView({ posts, onPostClick, onCreatePost, canEdit, channe
                         </span>
                       )}
                       {(post as any).assets && Array.isArray((post as any).assets) && (post as any).assets.length > 0 && (
-                        <span className="text-xs" title="Anexos">📎 {(post as any).assets.length}</span>
+                        <AttachmentPopover assets={(post as any).assets} />
                       )}
                     </div>
                   </div>

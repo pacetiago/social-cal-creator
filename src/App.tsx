@@ -20,6 +20,7 @@ import AdminUsers from "./pages/admin/AdminUsers";
 import AdminAudit from "./pages/admin/AdminAudit";
 import AdminCompanies from "./pages/admin/AdminCompanies";
 import AdminChannels from "./pages/admin/AdminChannels";
+import AdminRoles from "./pages/admin/AdminRoles";
 
 // Client Portal Pages
 import ClientCalendar from "./pages/client/ClientCalendar";
@@ -83,6 +84,11 @@ const App = () => (
               <Route path="/admin/channels" element={
                 <ProtectedRoute>
                   <AdminChannels />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/roles" element={
+                <ProtectedRoute>
+                  <AdminRoles />
                 </ProtectedRoute>
               } />
               

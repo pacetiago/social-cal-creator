@@ -58,47 +58,54 @@ export function BulkImport({ orgId }: { orgId?: string }) {
     setProgress(0);
 
     try {
-      // Read file as base64
-      const reader = new FileReader();
-      reader.onload = async (event) => {
-        const base64 = event.target?.result as string;
-        
-        setProgress(30);
+      // Read file as base64 with proper Promise handling
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(new Error('Falha ao ler o arquivo'));
+        reader.readAsDataURL(file);
+      });
 
-        // Call edge function to process the spreadsheet
-        const { data: { session } } = await supabase.auth.getSession();
-        const invokeOptions: any = session
-          ? {
-              body: {
-                file: base64.split(',')[1], // Remove data:*/*;base64, prefix
-                filename: file.name,
-                orgId: orgId
-              },
-              headers: { Authorization: `Bearer ${session.access_token}` }
-            }
-          : {
-              body: {
-                file: base64.split(',')[1],
-                filename: file.name,
-                orgId: orgId
-              }
-            };
+      setProgress(30);
 
-        const { data, error } = await supabase.functions.invoke('bulk-import-posts', invokeOptions);
+      // Get session and call edge function
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('Usuário não autenticado');
+      }
 
-        setProgress(100);
+      const { data, error } = await supabase.functions.invoke('bulk-import-posts', {
+        body: {
+          file: base64.split(',')[1], // Remove data:*/*;base64, prefix
+          filename: file.name,
+          orgId: orgId
+        },
+        headers: { Authorization: `Bearer ${session.access_token}` }
+      });
 
-        if (error) throw error;
+      setProgress(100);
 
-        setResults(data);
-        
-        toast({
-          title: 'Importação concluída',
-          description: `${data.success} posts importados com sucesso. ${data.failed} erros.`,
-        });
-      };
+      if (error) {
+        console.error('Edge function error:', error);
+        throw new Error(error.message || 'Erro ao processar importação');
+      }
 
-      reader.readAsDataURL(file);
+      setResults(data);
+      setFile(null);
+      
+      // Clear file input
+      const input = document.getElementById('file-upload') as HTMLInputElement;
+      if (input) input.value = '';
+
+      toast({
+        title: 'Importação concluída',
+        description: `${data.success || 0} posts importados. ${data.failed || 0} erros.`,
+      });
+
+      // Show detailed errors if any
+      if (data.errors && data.errors.length > 0) {
+        console.error('Import errors:', data.errors);
+      }
     } catch (error: any) {
       console.error('Import error:', error);
       toast({
@@ -106,6 +113,7 @@ export function BulkImport({ orgId }: { orgId?: string }) {
         description: error.message || 'Não foi possível importar os dados',
         variant: 'destructive',
       });
+      setResults(null);
     } finally {
       setImporting(false);
     }

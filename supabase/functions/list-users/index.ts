@@ -49,25 +49,31 @@ Deno.serve(async (req) => {
 
     console.log('list-users: User authenticated:', user.id);
 
-    // SECURITY: Check if user is platform admin using the secure function
-    const { data: hasAdminRole, error: roleCheckError } = await supabase
+    // SECURITY: Check if user is platform admin or owner using the secure function
+    const { data: hasAdminRole, error: adminCheckError } = await supabase
       .rpc('has_platform_role', { 
         _user_id: user.id, 
         _role: 'platform_admin' 
       });
 
-    if (roleCheckError) {
-      console.error('list-users: Failed to check role', roleCheckError);
+    const { data: hasOwnerRole, error: ownerCheckError } = await supabase
+      .rpc('has_platform_role', { 
+        _user_id: user.id, 
+        _role: 'platform_owner' 
+      });
+
+    if (adminCheckError || ownerCheckError) {
+      console.error('list-users: Failed to check role', adminCheckError || ownerCheckError);
       return new Response(
         JSON.stringify({ error: 'Failed to verify permissions' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    if (!hasAdminRole) {
-      console.error('list-users: User is not platform admin');
+    if (!hasAdminRole && !hasOwnerRole) {
+      console.error('list-users: User is not platform admin or owner');
       return new Response(
-        JSON.stringify({ error: 'Insufficient permissions. Platform admin access required.' }),
+        JSON.stringify({ error: 'Insufficient permissions. Platform admin or owner access required.' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
