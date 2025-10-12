@@ -74,7 +74,7 @@ export function BulkImport({ orgId }: { orgId?: string }) {
         throw new Error('Usuário não autenticado');
       }
 
-      const { data, error } = await supabase.functions.invoke('bulk-import-posts', {
+      const resp = await supabase.functions.invoke('bulk-import-posts', {
         body: {
           file: base64.split(',')[1], // Remove data:*/*;base64, prefix
           filename: file.name,
@@ -85,12 +85,13 @@ export function BulkImport({ orgId }: { orgId?: string }) {
 
       setProgress(100);
 
-      if (error) {
-        console.error('Edge function error:', error);
-        throw new Error(error.message || 'Erro ao processar importação');
+      if (resp.error) {
+        console.error('Edge function error:', resp.error, resp.data);
+        const serverMsg = (resp.data as any)?.error;
+        throw new Error(serverMsg || resp.error.message || 'Erro ao processar importação');
       }
 
-      setResults(data);
+      setResults(resp.data);
       setFile(null);
       
       // Clear file input
@@ -99,12 +100,12 @@ export function BulkImport({ orgId }: { orgId?: string }) {
 
       toast({
         title: 'Importação concluída',
-        description: `${data.success || 0} posts importados. ${data.failed || 0} erros.`,
+        description: `${resp.data.success || 0} posts importados. ${resp.data.failed || 0} erros.`,
       });
 
       // Show detailed errors if any
-      if (data.errors && data.errors.length > 0) {
-        console.error('Import errors:', data.errors);
+      if (resp.data.errors && resp.data.errors.length > 0) {
+        console.error('Import errors:', resp.data.errors);
       }
     } catch (error: any) {
       console.error('Import error:', error);

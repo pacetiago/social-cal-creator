@@ -78,14 +78,15 @@ export function useUsers() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Not authenticated');
 
-      const { data, error } = await supabase.functions.invoke('update-user-role', {
+      const resp = await supabase.functions.invoke('update-user-role', {
         body: { userId, role: newRole },
         headers: { Authorization: `Bearer ${session.access_token}` }
       });
 
-      if (error) {
-        console.error('Edge function error:', error);
-        throw new Error(error.message || 'Failed to update user role');
+      if (resp.error) {
+        console.error('Edge function error:', resp.error, resp.data);
+        const serverMsg = (resp.data as any)?.error;
+        throw new Error(serverMsg || resp.error.message || 'Failed to update user role');
       }
 
       // Refresh users list after update

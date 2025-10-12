@@ -46,8 +46,12 @@ export default function AdminUsers() {
   const handleDeactivateUser = async (userId: string, userEmail: string) => {
     if (confirm(`Tem certeza que deseja desativar o usuário ${userEmail}?`)) {
       try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) throw new Error('Usuário não autenticado');
+
         const { error } = await supabase.functions.invoke('delete-user', {
-          body: { userId }
+          body: { userId },
+          headers: { Authorization: `Bearer ${session.access_token}` }
         });
 
         if (error) throw error;
@@ -61,7 +65,7 @@ export default function AdminUsers() {
       } catch (error) {
         toast({
           title: 'Erro ao desativar usuário',
-          description: 'Não foi possível desativar o usuário.',
+          description: error instanceof Error ? error.message : 'Não foi possível desativar o usuário.',
           variant: 'destructive',
         });
       }
