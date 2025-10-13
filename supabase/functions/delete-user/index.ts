@@ -42,16 +42,15 @@ serve(async (req) => {
       throw new Error('Unauthorized')
     }
 
-    // SECURITY: Check if the user has platform admin permissions using secure role system
-    const { data: userRole, error: roleError } = await supabaseAdmin
+    // SECURITY: Check if the user has platform admin or owner permissions
+    const { data: userRoles, error: roleError } = await supabaseAdmin
       .from('user_roles')
       .select('role')
       .eq('user_id', user.id)
-      .eq('role', 'platform_admin')
-      .single()
+      .in('role', ['platform_admin', 'platform_owner'])
 
-    if (roleError || !userRole) {
-      throw new Error('Insufficient permissions - Platform admin required')
+    if (roleError || !userRoles || userRoles.length === 0) {
+      throw new Error('Insufficient permissions - Platform admin or owner required')
     }
 
     // Get request body
