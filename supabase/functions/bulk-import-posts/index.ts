@@ -42,30 +42,61 @@ serve(async (req) => {
       );
     }
 
-    const { file, filename, orgId } = await req.json();
+    const body = await req.json();
+    const { file, filename, orgId } = body;
+
+    console.log('Request body received:', { hasFile: !!file, filename, orgId });
 
     if (!file || !orgId) {
       return new Response(
-        JSON.stringify({ error: 'Missing required fields' }),
+        JSON.stringify({ error: 'Missing required fields: file and orgId are required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log('Processing file:', filename);
+    console.log('Processing file:', filename, 'for org:', orgId);
 
     // Decode base64 file
-    const binaryString = atob(file);
-    const bytes = new Uint8Array(binaryString.length);
-    for (let i = 0; i < binaryString.length; i++) {
-      bytes[i] = binaryString.charCodeAt(i);
+    let bytes: Uint8Array;
+    try {
+      const binaryString = atob(file);
+      bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      console.log('File decoded successfully, size:', bytes.length, 'bytes');
+    } catch (decodeError) {
+      console.error('Error decoding base64:', decodeError);
+      return new Response(
+        JSON.stringify({ error: 'Invalid file format: could not decode base64' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     // Parse spreadsheet
-    const workbook = XLSX.read(bytes, { type: 'array' });
-    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-    const data = XLSX.utils.sheet_to_json(firstSheet);
-
-    console.log('Found', data.length, 'rows');
+    let data: any[];
+    try {
+      const workbook = XLSX.read(bytes, { type: 'array' });
+      if (!workbook.SheetNames || workbook.SheetNames.length === 0) {
+        throw new Error('No sheets found in workbook');
+      }
+      const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+      data = XLSX.utils.sheet_to_json(firstSheet);
+      console.log('Spreadsheet parsed successfully. Found', data.length, 'rows');
+      
+      if (data.length === 0) {
+        return new Response(
+          JSON.stringify({ error: 'Planilha vazia ou sem dados válidos' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    } catch (parseError: any) {
+      console.error('Error parsing spreadsheet:', parseError);
+      return new Response(
+        JSON.stringify({ error: `Erro ao processar planilha: ${parseError.message}` }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     const results = {
       success: 0,
@@ -75,15 +106,33 @@ serve(async (req) => {
     };
 
     // Get clients and companies for mapping
-    const { data: clients } = await supabaseAdmin
+    const { data: clients, error: clientsError } = await supabaseAdmin
       .from('clients')
       .select('id, name')
       .eq('org_id', orgId);
 
-    const { data: channels } = await supabaseAdmin
+    if (clientsError) {
+      console.error('Error fetching clients:', clientsError);
+      return new Response(
+        JSON.stringify({ error: 'Erro ao buscar clientes da organização' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const { data: channels, error: channelsError } = await supabaseAdmin
       .from('channels')
       .select('id, name, key')
       .eq('org_id', orgId);
+
+    if (channelsError) {
+      console.error('Error fetching channels:', channelsError);
+      return new Response(
+        JSON.stringify({ error: 'Erro ao buscar canais da organização' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log('Found', clients?.length || 0, 'clients and', channels?.length || 0, 'channels for org');
 
     // Process each row
     for (let i = 0; i < data.length; i++) {
@@ -147,30 +196,37 @@ serve(async (req) => {
         const mediaTypeRaw = row['Tipo de Mídia'] || row['MEDIA TYPE'] || row['tipo_midia'] || '';
         const mediaType = mediaTypeMap[mediaTypeRaw.toLowerCase()] || null;
 
+        // Prepare post data
+        const postData = {
+          org_id: orgId,
+          client_id: client.id,
+          company_id: company?.id || null,
+          channel_id: channel?.id || null,
+          title: row['Assunto'] || row['SUBJECT'] || row['assunto'] || 'Post Importado',
+          content: row['Conteúdo'] || row['CONTENT'] || row['conteudo'] || '',
+          publish_at: publishAt?.toISOString() || null,
+          media_type: mediaType,
+          responsibility: (row['Responsabilidade'] || 'agency').toLowerCase() === 'cliente' ? 'client' : 'agency',
+          status: 'draft',
+          created_by: user.id,
+          theme: row['Linha Editorial'] || row['THEME'] || row['linha_editorial'] || '',
+          insights: row['Insight'] || row['INSIGHTS'] || row['insight'] || '',
+        };
+
+        console.log('Inserting post:', { title: postData.title, client: client.name, company: company?.name });
+
         // Insert post
         const { error: insertError } = await supabaseAdmin
           .from('posts')
-          .insert({
-            org_id: orgId,
-            client_id: client.id,
-            company_id: company?.id || null,
-            channel_id: channel?.id || null,
-            title: row['Assunto'] || row['SUBJECT'] || row['assunto'] || 'Post Importado',
-            content: row['Conteúdo'] || row['CONTENT'] || row['conteudo'] || '',
-            publish_at: publishAt?.toISOString() || null,
-            media_type: mediaType,
-            responsibility: (row['Responsabilidade'] || 'agency').toLowerCase() === 'cliente' ? 'client' : 'agency',
-            status: 'draft',
-            created_by: user.id,
-            theme: row['Linha Editorial'] || row['THEME'] || '',
-            insights: row['Insight'] || '',
-          });
+          .insert(postData);
 
         if (insertError) {
+          console.error('Insert error for row', i + 2, ':', insertError);
           throw insertError;
         }
 
         results.success++;
+        console.log('Successfully inserted post for row', i + 2);
       } catch (error: any) {
         console.error('Error processing row', i + 2, ':', error);
         results.failed++;

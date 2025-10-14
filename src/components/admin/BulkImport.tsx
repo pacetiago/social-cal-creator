@@ -85,12 +85,22 @@ export function BulkImport({ orgId }: { orgId?: string }) {
 
       setProgress(100);
 
+      // Handle response errors
       if (resp.error) {
-        console.error('Edge function error:', resp.error, resp.data);
-        const serverMsg = (resp.data as any)?.error;
-        throw new Error(serverMsg || resp.error.message || 'Erro ao processar importação');
+        console.error('Edge function error:', resp.error);
+        console.error('Response data:', resp.data);
+        
+        // Try to extract error message from various possible locations
+        const serverMsg = (resp.data as any)?.error || resp.error.message;
+        throw new Error(serverMsg || 'Erro ao processar importação');
       }
 
+      // Check if we have valid data
+      if (!resp.data) {
+        throw new Error('Nenhuma resposta recebida da função de importação');
+      }
+
+      console.log('Import results:', resp.data);
       setResults(resp.data);
       setFile(null);
       
@@ -98,14 +108,19 @@ export function BulkImport({ orgId }: { orgId?: string }) {
       const input = document.getElementById('file-upload') as HTMLInputElement;
       if (input) input.value = '';
 
+      // Show success toast
+      const successCount = resp.data.success || 0;
+      const failedCount = resp.data.failed || 0;
+      
       toast({
-        title: 'Importação concluída',
-        description: `${resp.data.success || 0} posts importados. ${resp.data.failed || 0} erros.`,
+        title: successCount > 0 ? 'Importação concluída' : 'Importação com erros',
+        description: `${successCount} posts importados com sucesso${failedCount > 0 ? `. ${failedCount} com erros.` : '.'}`,
+        variant: successCount > 0 ? 'default' : 'destructive',
       });
 
-      // Show detailed errors if any
+      // Log detailed errors if any
       if (resp.data.errors && resp.data.errors.length > 0) {
-        console.error('Import errors:', resp.data.errors);
+        console.error('Detailed import errors:', resp.data.errors);
       }
     } catch (error: any) {
       console.error('Import error:', error);
@@ -128,7 +143,9 @@ export function BulkImport({ orgId }: { orgId?: string }) {
           Importação em Massa de Posts
         </CardTitle>
         <CardDescription>
-          Faça upload de uma planilha Excel ou CSV para importar múltiplos posts de uma vez
+          Faça upload de uma planilha Excel ou CSV para importar múltiplos posts de uma vez.
+          <br />
+          <strong>Colunas aceitas:</strong> Cliente, Empresa, Data, Canal/Rede Social, Tipo de Mídia, Assunto, Conteúdo, Responsabilidade, Linha Editorial, Insight
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
