@@ -656,71 +656,94 @@ export function ModernPostForm({
             />
           </div>
 
-          <div className="space-y-3">
-            {/* Anexos já vinculados ao post */}
+          {/* Seção de Anexos Aprimorada */}
+          <div className="space-y-4 border-t pt-4">
+            {/* Anexos Existentes com visualização melhorada */}
             {initialData && (initialData as any).assets && (initialData as any).assets.length > 0 && (
-              <div>
-                <Label>Anexos do post</Label>
-                <div className="mt-2 grid grid-cols-1 gap-2">
-                  {(initialData as any).assets.map((asset: any) => (
-                    <div key={asset.id} className="flex items-center justify-between rounded-md border bg-card p-2">
-                      <div className="flex items-center gap-3 min-w-0">
-                        {asset.kind === 'image' && (assetUrls[asset.id] || asset.file_url) ? (
-                          <img src={assetUrls[asset.id] || asset.file_url} alt={asset.name || 'anexo'} className="h-10 w-10 rounded object-cover" loading="lazy" />
-                        ) : (
-                          <div className="h-10 w-10 rounded bg-muted flex items-center justify-center text-xs">{asset.kind?.toUpperCase() || 'FILE'}</div>
+              <div className="space-y-2">
+                <Label>Anexos Existentes</Label>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {(initialData as any).assets.map((asset: any) => {
+                    const signedUrl = assetUrls[asset.id] || asset.file_url;
+                    const isImage = asset.kind === 'image' || asset.mime_type?.startsWith('image/');
+                    const isVideo = asset.kind === 'video' || asset.mime_type?.startsWith('video/');
+                    
+                    return (
+                      <div
+                        key={asset.id}
+                        className="relative group border rounded-lg p-2 hover:bg-accent/50 transition-all duration-200"
+                      >
+                        {signedUrl && isImage && (
+                          <img
+                            src={signedUrl}
+                            alt={asset.name || 'anexo'}
+                            className="w-full h-24 object-cover rounded"
+                            loading="lazy"
+                          />
                         )}
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium truncate">{asset.name}</p>
-                          {asset.mime_type && (
-                            <p className="text-xs text-muted-foreground truncate">{asset.mime_type}</p>
-                          )}
-                        </div>
+                        {signedUrl && isVideo && (
+                          <video
+                            src={signedUrl}
+                            className="w-full h-24 object-cover rounded"
+                            muted
+                          />
+                        )}
+                        {!isImage && !isVideo && (
+                          <div className="w-full h-24 flex items-center justify-center bg-muted rounded">
+                            <Upload className="h-8 w-8 text-muted-foreground" />
+                          </div>
+                        )}
+                        <p className="text-xs mt-1 truncate" title={asset.name || 'anexo'}>
+                          {asset.name || 'Arquivo anexo'}
+                        </p>
+                        {signedUrl && (
+                          <a
+                            href={signedUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-black/60 rounded-lg flex items-center justify-center transition-opacity"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <span className="text-white text-sm font-medium">Abrir</span>
+                          </a>
+                        )}
                       </div>
-                      {(assetUrls[asset.id] || asset.file_url) && (
-                        <a
-                          href={assetUrls[asset.id] || asset.file_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm underline whitespace-nowrap"
-                        >
-                          Baixar
-                        </a>
-                      )}
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
 
             {/* Upload de novos anexos */}
             <div>
-              <Label htmlFor="attachments">Adicionar anexos (máx. 5MB por arquivo)</Label>
-              <div className="space-y-2">
-                <Input
-                  id="attachments"
-                  type="file"
-                  multiple
-                  accept="image/*,video/*,.pdf,.doc,.docx"
-                  onChange={(e) => {
-                    const files = Array.from(e.target.files || []);
-                    setAttachments(files);
-                  }}
-                  className="cursor-pointer"
-                />
-                {attachments.length > 0 && (
-                  <div className="text-sm text-muted-foreground">
-                    {attachments.length} arquivo(s) selecionado(s)
-                    <ul className="list-disc list-inside mt-1">
-                      {attachments.map((file, index) => (
-                        <li key={index}>
-                          {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
+              <Label htmlFor="new-attachments" className="flex items-center gap-2">
+                <Upload className="h-4 w-4" />
+                {initialData ? 'Adicionar Mais Anexos' : 'Anexar Arquivos'}
+              </Label>
+              <Input
+                id="new-attachments"
+                type="file"
+                multiple
+                accept="image/*,video/*,.pdf,.doc,.docx"
+                onChange={(e) => {
+                  if (e.target.files) {
+                    setAttachments(Array.from(e.target.files));
+                  }
+                }}
+                className="cursor-pointer mt-2"
+              />
+              {attachments.length > 0 && (
+                <div className="text-sm text-muted-foreground mt-2">
+                  {attachments.length} arquivo(s) selecionado(s) para upload
+                  <ul className="list-disc list-inside mt-1">
+                    {attachments.map((file, index) => (
+                      <li key={index} className="truncate">
+                        {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           </div>
 
