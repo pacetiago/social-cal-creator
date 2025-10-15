@@ -190,7 +190,7 @@ serve(async (req) => {
         );
 
         if (!client) {
-          throw new Error(`Cliente não encontrado: "${clientName}". Verifique se o cliente existe na organização.`);
+          throw new Error(`Cliente '${clientName}' não encontrado ou não pertence à organização. Clientes disponíveis: ${clients?.map(c => c.name).join(', ') || 'nenhum'}`);
         }
         
         console.log(`   ✓ Cliente encontrado: ${client.name}`);
@@ -217,7 +217,7 @@ serve(async (req) => {
           console.log(`   ✓ Empresa encontrada: ${company.name}`);
         }
 
-        // Parse date com validação
+        // Parse date com validação aprimorada
         const dateStr = getCellValue(row, ['Data', 'Date', 'data', 'DATA', 'Data de Publicação']);
         let publishAt = null;
         if (dateStr) {
@@ -232,13 +232,11 @@ serve(async (req) => {
             
             // Validar se a data é válida
             if (isNaN(publishAt.getTime())) {
-              console.warn(`   ⚠️  Data inválida: "${dateStr}". Usando null.`);
-              publishAt = null;
-            } else {
-              console.log(`   ✓ Data: ${publishAt.toISOString().split('T')[0]}`);
+              throw new Error(`Formato de data inválido: "${dateStr}"`);
             }
-          } catch (e) {
-            console.warn(`   ⚠️  Erro ao processar data "${dateStr}":`, e);
+            console.log(`   ✓ Data: ${publishAt.toISOString().split('T')[0]}`);
+          } catch (dateParseError: any) {
+            console.warn(`   ⚠️  Data inválida na linha ${rowNumber}: ${dateStr}. Erro: ${dateParseError.message}`);
             publishAt = null;
           }
         }
