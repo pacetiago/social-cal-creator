@@ -73,11 +73,14 @@ export function ModernPostForm({
   const [attachments, setAttachments] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
   const [assetUrls, setAssetUrls] = useState<Record<string, string>>({});
+  const [existingAssets, setExistingAssets] = useState<any[]>(((initialData as any)?.assets) || []);
 
   // Gera URLs assinadas para anexos existentes (bucket privado)
   useEffect(() => {
     const loadUrls = async () => {
-      const assets = (initialData as any)?.assets as any[] | undefined;
+      const assets = (existingAssets && existingAssets.length > 0)
+        ? existingAssets
+        : ((initialData as any)?.assets || []);
       if (!assets || assets.length === 0) {
         setAssetUrls({});
         return;
@@ -98,14 +101,17 @@ export function ModernPostForm({
             map[asset.id] = asset.file_url;
           }
         } catch (e) {
-          // fallback para file_url se existir
           if (asset.file_url) map[asset.id] = asset.file_url;
         }
       }
       setAssetUrls(map);
+      // Se ainda não inicializamos existingAssets, defina-o a partir de initialData
+      if (!existingAssets || existingAssets.length === 0) {
+        setExistingAssets(assets);
+      }
     };
     loadUrls();
-  }, [initialData]);
+  }, [existingAssets, initialData]);
   // Initialize form data when modal opens or initialData changes
   useEffect(() => {
     if (isOpen) {
@@ -274,18 +280,13 @@ export function ModernPostForm({
           continue;
         }
 
-        // Get public URL
-        const { data: { publicUrl } } = supabase.storage
-          .from('post-attachments')
-          .getPublicUrl(fileName);
-
         // Determine asset kind based on mime type
         let assetKind: 'image' | 'video' | 'doc' = 'image';
         if (file.type.startsWith('video/')) assetKind = 'video';
         else if (file.type.includes('pdf') || file.type.includes('document')) assetKind = 'doc';
 
-        // Insert into assets table
-        const { error: assetError } = await supabase
+        // Insert into assets table and get inserted row
+        const { data: inserted, error: assetError } = await supabase
           .from('assets')
           .insert([{
             org_id: orgId,
@@ -293,11 +294,13 @@ export function ModernPostForm({
             name: file.name,
             kind: assetKind,
             file_path: fileName,
-            file_url: publicUrl,
+            file_url: null,
             mime_type: file.type,
             file_size: file.size,
             metadata: {}
-          }]);
+          }])
+          .select('*')
+          .single();
 
         if (assetError) {
           console.error('Error inserting asset:', assetError);
@@ -306,6 +309,18 @@ export function ModernPostForm({
             description: assetError.message,
             variant: 'destructive',
           });
+        } else if (inserted) {
+          // Generate signed URL for immediate preview
+          try {
+            const { data: signed, error: signError } = await supabase.storage
+              .from('post-attachments')
+              .createSignedUrl(fileName, 60 * 60);
+            if (!signError && signed?.signedUrl) {
+              setAssetUrls(prev => ({ ...prev, [inserted.id]: signed.signedUrl }));
+            }
+          } catch {}
+          // Update existing assets state to reflect in UI immediately
+          setExistingAssets(prev => [...prev, inserted]);
         }
       } catch (error) {
         console.error('Error uploading file:', error);
@@ -659,7 +674,7 @@ export function ModernPostForm({
           {/* Seção de Anexos Aprimorada */}
           <div className="space-y-4 border-t pt-4">
             {/* Anexos Existentes com visualização melhorada */}
-            {initialData && (initialData as any).assets && (initialData as any).assets.length > 0 && (
+            {existingAssets && existingAssets.length > 0 && (
               <div className="space-y-2">
                 <Label>Anexos Existentes</Label>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

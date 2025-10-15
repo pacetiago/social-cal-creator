@@ -299,7 +299,7 @@ serve(async (req) => {
           publish_at: publishAt?.toISOString() || null,
           media_type: mediaType,
           responsibility: responsibility.toString().toLowerCase().includes('cliente') ? 'client' : 'agency',
-          status: 'draft',
+          status: 'idea',
           created_by: user.id,
           theme: theme,
           insights: insights,
