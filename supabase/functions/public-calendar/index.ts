@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.4";
+import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -30,18 +31,40 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { token, action, filters = {} }: PublicCalendarRequest = await req.json();
-    
-    console.log('Request received:', { token: token?.substring(0, 10) + '...', action, filters });
+    // Define and validate input schema
+    const PublicCalendarSchema = z.object({
+      token: z.string().min(1, "Token is required"),
+      action: z.enum(['validate', 'get-data'], { errorMap: () => ({ message: "Action must be 'validate' or 'get-data'" }) }),
+      filters: z.object({
+        clientId: z.string().uuid().optional(),
+        companyId: z.string().uuid().optional(),
+        responsibility: z.enum(['agency', 'client']).optional()
+      }).optional()
+    });
 
-    if (!token) {
-      return new Response(JSON.stringify({ error: 'Token is required' }), {
+    // Parse and validate request body
+    const body = await req.json();
+    let validatedData;
+    try {
+      validatedData = PublicCalendarSchema.parse(body);
+    } catch (validationError: any) {
+      console.error('Validation error:', validationError);
+      return new Response(JSON.stringify({ error: 'Invalid input', details: validationError.errors }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // Validate token and get organization
+    const { token, action, filters = {} } = validatedData;
+    
+    console.log('Request received:', { token: token?.substring(0, 10) + '...', action, filters });
+    
+    // Hash the token for validation (tokens are now stored as SHA-256 hashes)
+    const hashedToken = Array.from(
+      new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(token)))
+    ).map(b => b.toString(16).padStart(2, '0')).join('');
+
+    // Validate hashed token and get organization
     const { data: shareToken, error: tokenError } = await supabase
       .from('share_tokens')
       .select(`
@@ -52,7 +75,7 @@ const handler = async (req: Request): Promise<Response> => {
           slug
         )
       `)
-      .eq('token', token)
+      .eq('token', hashedToken)
       .eq('is_active', true)
       .single();
 

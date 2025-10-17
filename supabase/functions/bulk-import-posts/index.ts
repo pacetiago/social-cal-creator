@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import * as XLSX from 'https://cdn.sheetjs.com/xlsx-0.20.1/package/xlsx.mjs';
+import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 
 // Função para normalizar cabeçalhos de colunas
 const normalizeHeader = (header: string): string => {
@@ -68,17 +69,28 @@ serve(async (req) => {
       );
     }
 
+    // Define and validate input schema
+    const BulkImportSchema = z.object({
+      file: z.string().min(1, "File content is required"),
+      filename: z.string().min(1).max(255, "Filename must be between 1 and 255 characters"),
+      orgId: z.string().uuid("Invalid organization ID format")
+    });
+
+    // Parse and validate request body
     const body = await req.json();
-    const { file, filename, orgId } = body;
-
-    console.log('Request body received:', { hasFile: !!file, filename, orgId });
-
-    if (!file || !orgId) {
+    let validatedData;
+    try {
+      validatedData = BulkImportSchema.parse(body);
+    } catch (validationError: any) {
+      console.error('Validation error:', validationError);
       return new Response(
-        JSON.stringify({ error: 'Missing required fields: file and orgId are required' }),
+        JSON.stringify({ error: 'Invalid input', details: validationError.errors }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+    
+    const { file, filename, orgId } = validatedData;
+    console.log('Request body validated:', { hasFile: !!file, filename, orgId });
 
     console.log('Processing file:', filename, 'for org:', orgId);
 

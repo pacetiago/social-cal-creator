@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts"
+import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -59,8 +60,33 @@ serve(async (req) => {
       throw new Error('Insufficient permissions - platform_admin or platform_owner role required')
     }
 
-    // Get request body
-    const { email, password, fullName, role } = await req.json()
+    // Define and validate input schema
+    const CreateUserSchema = z.object({
+      email: z.string().email("Invalid email format").max(255),
+      password: z.string()
+        .min(8, "Password must be at least 8 characters")
+        .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+        .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+        .regex(/[0-9]/, "Password must contain at least one number")
+        .regex(/[^A-Za-z0-9]/, "Password must contain at least one special character"),
+      fullName: z.string().min(1).max(255).regex(/^[a-zA-Z\s'-]+$/, "Name contains invalid characters"),
+      role: z.enum(['platform_admin', 'platform_owner'], { errorMap: () => ({ message: "Invalid role" }) })
+    });
+
+    // Parse and validate request body
+    const body = await req.json();
+    let validatedData;
+    try {
+      validatedData = CreateUserSchema.parse(body);
+    } catch (validationError: any) {
+      console.error('Validation error:', validationError);
+      return new Response(
+        JSON.stringify({ error: 'Invalid input', details: validationError.errors }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    const { email, password, fullName, role } = validatedData;
 
     // Create the user using admin client
     const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({

@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.4';
+import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -43,13 +44,26 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { userId, role } = await req.json();
-    if (!userId || !role) {
+    // Define and validate input schema
+    const UpdateRoleSchema = z.object({
+      userId: z.string().uuid("Invalid user ID format"),
+      role: z.enum(['platform_admin', 'platform_owner'], { errorMap: () => ({ message: "Invalid role" }) })
+    });
+
+    // Parse and validate request body
+    const body = await req.json();
+    let validatedData;
+    try {
+      validatedData = UpdateRoleSchema.parse(body);
+    } catch (validationError: any) {
+      console.error('Validation error:', validationError);
       return new Response(
-        JSON.stringify({ error: 'Missing userId or role' }),
+        JSON.stringify({ error: 'Invalid input', details: validationError.errors }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+    
+    const { userId, role } = validatedData;
 
     // Permission checks using SECURITY DEFINER function via service client
     const { data: isAdmin, error: adminCheckErr } = await supabaseAdmin.rpc('has_platform_role', {

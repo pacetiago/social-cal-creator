@@ -771,6 +771,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      hash_token: {
+        Args: { token_input: string }
+        Returns: string
+      }
       is_platform_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
