@@ -89,9 +89,11 @@ export function ModernPostForm({
       for (const asset of assets) {
         try {
           if (asset.file_path) {
+            console.log("Frontend: Attempting to create signed URL for:", asset.file_path);
             const { data, error } = await supabase.storage
               .from('post-attachments')
               .createSignedUrl(asset.file_path, 60 * 60); // 1 hora
+            console.log("Frontend: createSignedUrl result:", { data, error });
             if (!error && data?.signedUrl) {
               map[asset.id] = data.signedUrl;
             } else if (asset.file_url) {
@@ -263,7 +265,7 @@ export function ModernPostForm({
       }
 
       try {
-        // Upload to Supabase Storage
+        // Upload to Supabase Storage with orgId prefix for RLS policies
         const fileExt = file.name.split('.').pop();
         const fileName = `${postId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
         

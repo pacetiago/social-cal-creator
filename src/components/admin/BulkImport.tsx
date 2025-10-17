@@ -70,6 +70,7 @@ export function BulkImport({ orgId }: { orgId?: string }) {
 
       // Get session and call edge function
       const { data: { session } } = await supabase.auth.getSession();
+      console.log("Frontend: Session access_token before invoke:", session?.access_token);
       if (!session) {
         throw new Error('Usuário não autenticado');
       }
