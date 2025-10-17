@@ -267,7 +267,7 @@ export function ModernPostForm({
       try {
         // Upload to Supabase Storage with orgId prefix for RLS policies
         const fileExt = file.name.split('.').pop();
-        const fileName = `${postId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const fileName = `${orgId}/${postId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
         
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('post-attachments')

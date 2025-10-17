@@ -35,6 +35,8 @@ serve(async (req) => {
   }
 
   try {
+    console.log("Edge Function: Authorization header received:", req.headers.get("Authorization")?.substring(0, 20) + "...");
+    
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
@@ -56,8 +58,10 @@ serve(async (req) => {
 
     // Verify authentication
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+    console.log("Edge Function: User authentication result:", { userId: user?.id, hasError: !!userError });
     
     if (userError || !user) {
+      console.error("Edge Function: Authentication failed:", userError);
       return new Response(
         JSON.stringify({ error: 'Not authenticated' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
