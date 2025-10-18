@@ -58,6 +58,27 @@ export function BulkImport({ orgId }: { orgId?: string }) {
     setProgress(0);
 
     try {
+      // Debug: Verificar sessão e token ANTES de tudo
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      console.log("🔐 Frontend Debug: Verificando autenticação antes do import");
+      console.log("   - Sessão ativa:", !!session);
+      console.log("   - Access token presente:", !!session?.access_token);
+      console.log("   - Token preview:", session?.access_token?.substring(0, 20) + "...");
+      console.log("   - User ID:", session?.user?.id);
+      console.log("   - User email:", session?.user?.email);
+      console.log("   - Erro de sessão:", sessionError);
+      
+      if (!session || sessionError) {
+        console.error("❌ Frontend Debug: Usuário não autenticado ao tentar importar planilha");
+        toast({
+          title: 'Não autenticado',
+          description: 'Você precisa estar autenticado para importar planilhas',
+          variant: 'destructive',
+        });
+        setImporting(false);
+        return;
+      }
+
       // Read file as base64 with proper Promise handling
       const base64 = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
@@ -68,12 +89,11 @@ export function BulkImport({ orgId }: { orgId?: string }) {
 
       setProgress(30);
 
-      // Get session and call edge function
-      const { data: { session } } = await supabase.auth.getSession();
-      console.log("Frontend: Session access_token before invoke:", session?.access_token);
-      if (!session) {
-        throw new Error('Usuário não autenticado');
-      }
+      console.log("📤 Frontend Debug: Invocando Edge Function bulk-import-posts");
+      console.log("   - orgId:", orgId);
+      console.log("   - filename:", file.name);
+      console.log("   - fileContent length:", base64.split(',')[1]?.length);
+      console.log("   - Authorization header será enviado:", `Bearer ${session.access_token.substring(0, 20)}...`);
 
       const resp = await supabase.functions.invoke('bulk-import-posts', {
         body: {
@@ -83,6 +103,11 @@ export function BulkImport({ orgId }: { orgId?: string }) {
         },
         headers: { Authorization: `Bearer ${session.access_token}` }
       });
+
+      console.log("📥 Frontend Debug: Resposta da Edge Function");
+      console.log("   - Success:", !resp.error);
+      console.log("   - Data:", resp.data);
+      console.log("   - Error:", resp.error);
 
       setProgress(100);
 

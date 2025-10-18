@@ -31,16 +31,30 @@ export function AttachmentPopover({ assets }: AttachmentPopoverProps) {
     for (const asset of assets) {
       try {
         if (asset.file_path) {
+          console.log("🔗 Frontend Debug: Tentando criar signed URL para anexo");
+          console.log("   - Asset ID:", asset.id);
+          console.log("   - file_path:", asset.file_path);
+          console.log("   - Padrão esperado: orgId/postId/filename");
+          
           const { data, error } = await supabase.storage
             .from('post-attachments')
             .createSignedUrl(asset.file_path, 60 * 15); // 15 minutes
 
+          console.log("   - createSignedUrl result:");
+          console.log("     - Success:", !error);
+          console.log("     - signedUrl:", data?.signedUrl?.substring(0, 50) + "...");
+          console.log("     - Error:", error);
+
           if (!error && data?.signedUrl) {
             map[asset.id] = data.signedUrl;
           } else if (asset.file_url) {
+            console.log("   - Usando file_url fallback:", asset.file_url);
             map[asset.id] = asset.file_url;
           }
         } else if (asset.file_url) {
+          console.log("🔗 Frontend Debug: Usando file_url diretamente");
+          console.log("   - Asset ID:", asset.id);
+          console.log("   - file_url:", asset.file_url);
           map[asset.id] = asset.file_url;
         }
       } catch (e) {

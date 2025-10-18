@@ -268,7 +268,10 @@ export function ModernPostForm({
         // Upload to Supabase Storage with orgId prefix for RLS policies
         const fileExt = file.name.split('.').pop();
         const fileName = `${orgId}/${postId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-        
+        console.log("📁 Frontend Debug: Generated file_path for upload:", fileName);
+        console.log("   - orgId:", orgId);
+        console.log("   - postId:", postId);
+        console.log("   - Padrão esperado: orgId/postId/filename");
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('post-attachments')
           .upload(fileName, file);
