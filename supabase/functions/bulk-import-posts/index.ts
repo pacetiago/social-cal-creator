@@ -36,35 +36,39 @@ serve(async (req) => {
   }
 
   try {
-    console.log("Edge Function: Authorization header received:", req.headers.get("Authorization")?.substring(0, 20) + "...");
+    // Extract token from Authorization header
+    const authHeader = req.headers.get('Authorization');
+    console.log("Edge Function: Authorization header received:", authHeader?.substring(0, 20) + "...");
     
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        global: {
-          headers: { Authorization: req.headers.get('Authorization')! },
-        },
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false,
-        },
-      }
-    );
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.error("Edge Function: Missing or invalid Authorization header");
+      return new Response(
+        JSON.stringify({ error: 'Missing authorization token' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
+    const token = authHeader.replace('Bearer ', '');
+    console.log("Edge Function: Extracted token:", token.substring(0, 20) + "...");
+
+    // Create admin client for token validation
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Verify authentication
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
-    console.log("Edge Function: User authentication result:", { userId: user?.id, hasError: !!userError });
+    // Validate token using admin client
+    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token);
+    console.log("Edge Function: Token validation result:", { 
+      userId: user?.id, 
+      email: user?.email,
+      hasError: !!userError 
+    });
     
     if (userError || !user) {
-      console.error("Edge Function: Authentication failed:", userError);
+      console.error("Edge Function: Token validation failed:", userError);
       return new Response(
-        JSON.stringify({ error: 'Not authenticated' }),
+        JSON.stringify({ error: 'Invalid or expired token' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
