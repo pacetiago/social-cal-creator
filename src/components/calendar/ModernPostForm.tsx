@@ -345,6 +345,7 @@ export function ModernPostForm({
 
   const handleClose = () => {
     setAttachments([]);
+    setExistingAssets(((initialData as any)?.assets) || []);
     onClose();
   };
 
@@ -683,7 +684,7 @@ export function ModernPostForm({
               <div className="space-y-2">
                 <Label>Anexos Existentes</Label>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  {(initialData as any).assets.map((asset: any) => {
+                  {existingAssets.map((asset: any) => {
                     const signedUrl = assetUrls[asset.id] || asset.file_url;
                     const isImage = asset.kind === 'image' || asset.mime_type?.startsWith('image/');
                     const isVideo = asset.kind === 'video' || asset.mime_type?.startsWith('video/');
