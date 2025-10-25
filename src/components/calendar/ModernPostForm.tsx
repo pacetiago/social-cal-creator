@@ -754,15 +754,41 @@ export function ModernPostForm({
                 className="cursor-pointer mt-2"
               />
               {attachments.length > 0 && (
-                <div className="text-sm text-muted-foreground mt-2">
-                  {attachments.length} arquivo(s) selecionado(s) para upload
-                  <ul className="list-disc list-inside mt-1">
+                <div className="text-sm text-muted-foreground mt-2 space-y-2">
+                  <div>
+                    {attachments.length} arquivo(s) selecionado(s) para upload
+                  </div>
+                  <ul className="list-disc list-inside">
                     {attachments.map((file, index) => (
                       <li key={index} className="truncate">
                         {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
                       </li>
                     ))}
                   </ul>
+
+                  {/* Pré-visualização imediata dos anexos selecionados */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {attachments.map((file, index) => {
+                      const isImage = file.type.startsWith('image/');
+                      return (
+                        <div key={`preview-${index}`} className="relative border rounded-lg p-2 bg-muted/40">
+                          {isImage ? (
+                            <img
+                              src={URL.createObjectURL(file)}
+                              alt={file.name}
+                              className="w-full h-24 object-cover rounded"
+                              loading="lazy"
+                            />
+                          ) : (
+                            <div className="w-full h-24 flex items-center justify-center bg-background rounded text-xs text-muted-foreground">
+                              {file.type || 'arquivo'}
+                            </div>
+                          )}
+                          <p className="text-xs mt-1 truncate" title={file.name}>{file.name}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
             </div>
