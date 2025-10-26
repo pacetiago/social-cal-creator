@@ -474,6 +474,7 @@ export default function ClientCalendar() {
             defaultDate={defaultDate}
             orgId={organization?.id}
             clients={clients}
+            onAfterUpload={refetch}
             onDelete={handleDeletePost}
           />
         )}

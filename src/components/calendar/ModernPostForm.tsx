@@ -30,6 +30,7 @@ interface ModernPostFormProps {
   orgId?: string;
   clients?: Client[];
   onDelete?: (postId: string) => Promise<void>;
+  onAfterUpload?: () => Promise<void> | void;
 }
 
 export function ModernPostForm({ 
@@ -42,7 +43,8 @@ export function ModernPostForm({
   defaultDate,
   orgId,
   clients: clientsProp,
-  onDelete
+  onDelete,
+  onAfterUpload
 }: ModernPostFormProps) {
   const { toast } = useToast();
   const clientsHook = useClients(orgId);
@@ -341,6 +343,14 @@ export function ModernPostForm({
       title: 'Anexos enviados',
       description: `${attachments.length} arquivo(s) enviado(s) com sucesso`,
     });
+
+    try {
+      if (onAfterUpload) {
+        await Promise.resolve(onAfterUpload());
+      }
+    } catch (_) {
+      // Ignora erros de atualização após upload
+    }
   };
 
   const handleClose = () => {
