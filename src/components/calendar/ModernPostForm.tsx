@@ -75,47 +75,67 @@ export function ModernPostForm({
   const [attachments, setAttachments] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
   const [assetUrls, setAssetUrls] = useState<Record<string, string>>({});
-  const [existingAssets, setExistingAssets] = useState<any[]>(((initialData as any)?.assets) || []);
+  const [existingAssets, setExistingAssets] = useState<any[]>([]);
+  const [loadingAssets, setLoadingAssets] = useState(false);
 
-  // Gera URLs assinadas para anexos existentes (bucket privado)
+  // Busca assets diretamente do banco quando modal abrir com post existente
   useEffect(() => {
-    const loadUrls = async () => {
-      const assets = (existingAssets && existingAssets.length > 0)
-        ? existingAssets
-        : ((initialData as any)?.assets || []);
-      if (!assets || assets.length === 0) {
+    const loadAssetsFromDB = async () => {
+      if (!isOpen || !initialData?.id) {
+        setExistingAssets([]);
         setAssetUrls({});
         return;
       }
-      const map: Record<string, string> = {};
-      for (const asset of assets) {
-        try {
-          if (asset.file_path) {
-            console.log("Frontend: Attempting to create signed URL for:", asset.file_path);
-            const { data, error } = await supabase.storage
-              .from('post-attachments')
-              .createSignedUrl(asset.file_path, 60 * 60); // 1 hora
-            console.log("Frontend: createSignedUrl result:", { data, error });
-            if (!error && data?.signedUrl) {
-              map[asset.id] = data.signedUrl;
-            } else if (asset.file_url) {
-              map[asset.id] = asset.file_url;
-            }
-          } else if (asset.file_url) {
-            map[asset.id] = asset.file_url;
-          }
-        } catch (e) {
-          if (asset.file_url) map[asset.id] = asset.file_url;
+
+      setLoadingAssets(true);
+      try {
+        // Busca assets diretamente da tabela para garantir dados atualizados
+        const { data: assets, error } = await supabase
+          .from('assets')
+          .select('*')
+          .eq('post_id', initialData.id)
+          .order('created_at', { ascending: true });
+
+        if (error) {
+          console.error('Erro ao carregar assets:', error);
+          setExistingAssets([]);
+          return;
         }
-      }
-      setAssetUrls(map);
-      // Se ainda não inicializamos existingAssets, defina-o a partir de initialData
-      if (!existingAssets || existingAssets.length === 0) {
-        setExistingAssets(assets);
+
+        setExistingAssets(assets || []);
+
+        // Gera URLs assinadas para os assets
+        if (assets && assets.length > 0) {
+          const map: Record<string, string> = {};
+          for (const asset of assets) {
+            try {
+              if (asset.file_path) {
+                const { data, error: urlError } = await supabase.storage
+                  .from('post-attachments')
+                  .createSignedUrl(asset.file_path, 60 * 60);
+                if (!urlError && data?.signedUrl) {
+                  map[asset.id] = data.signedUrl;
+                } else if (asset.file_url) {
+                  map[asset.id] = asset.file_url;
+                }
+              } else if (asset.file_url) {
+                map[asset.id] = asset.file_url;
+              }
+            } catch (e) {
+              if (asset.file_url) map[asset.id] = asset.file_url;
+            }
+          }
+          setAssetUrls(map);
+        }
+      } catch (error) {
+        console.error('Erro ao buscar assets:', error);
+      } finally {
+        setLoadingAssets(false);
       }
     };
-    loadUrls();
-  }, [existingAssets, initialData]);
+
+    loadAssetsFromDB();
+  }, [isOpen, initialData?.id]);
   // Initialize form data when modal opens or initialData changes
   useEffect(() => {
     if (isOpen) {
@@ -317,17 +337,7 @@ export function ModernPostForm({
             variant: 'destructive',
           });
         } else if (inserted) {
-          // Generate signed URL for immediate preview
-          try {
-            const { data: signed, error: signError } = await supabase.storage
-              .from('post-attachments')
-              .createSignedUrl(fileName, 60 * 60);
-            if (!signError && signed?.signedUrl) {
-              setAssetUrls(prev => ({ ...prev, [inserted.id]: signed.signedUrl }));
-            }
-          } catch {}
-          // Update existing assets state to reflect in UI immediately
-          setExistingAssets(prev => [...prev, inserted]);
+          console.log('Asset inserido com sucesso:', inserted.id);
         }
       } catch (error) {
         console.error('Error uploading file:', error);
@@ -355,7 +365,8 @@ export function ModernPostForm({
 
   const handleClose = () => {
     setAttachments([]);
-    setExistingAssets(((initialData as any)?.assets) || []);
+    setExistingAssets([]);
+    setAssetUrls({});
     onClose();
   };
 
@@ -690,9 +701,14 @@ export function ModernPostForm({
           {/* Seção de Anexos Aprimorada */}
           <div className="space-y-4 border-t pt-4">
             {/* Anexos Existentes com visualização melhorada */}
-            {existingAssets && existingAssets.length > 0 && (
+            {loadingAssets && (
+              <div className="text-sm text-muted-foreground">
+                Carregando anexos...
+              </div>
+            )}
+            {!loadingAssets && existingAssets && existingAssets.length > 0 && (
               <div className="space-y-2">
-                <Label>Anexos Existentes</Label>
+                <Label>Anexos Existentes ({existingAssets.length})</Label>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   {existingAssets.map((asset: any) => {
                     const signedUrl = assetUrls[asset.id] || asset.file_url;
