@@ -96,6 +96,11 @@ export function ModernPostForm({
           .eq('post_id', initialData.id)
           .order('created_at', { ascending: true });
 
+        console.log('[PostForm] Assets carregados do DB:', { count: assets?.length, postId: initialData.id });
+        if (assets && assets.length > 0) {
+          console.log('[PostForm] Primeiros assets:', assets.slice(0, 3).map(a => ({ id: a.id, file_path: a.file_path, mime: a.mime_type })));
+        }
+
         if (error) {
           console.error('Erro ao carregar assets:', error);
           setExistingAssets([]);
