@@ -197,6 +197,7 @@ export function ModernPostForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('[PostForm] Submitting. attachments count =', attachments.length, 'initialData?', !!initialData);
     
     if (!formData.title.trim()) {
       return;
@@ -277,8 +278,10 @@ export function ModernPostForm({
     }
   };
 
-  const uploadAttachments = async (postId: string) => {
+  const uploadAttachments = async (postId: string, filesParam?: File[]) => {
+    const files = filesParam ?? attachments;
     const effectiveOrgId = (orgId || (initialData as any)?.org_id) as string | undefined;
+    console.log('[PostForm] uploadAttachments start', { postId, effectiveOrgId, files: files.map(f => ({ name: f.name, type: f.type, size: f.size })) });
     if (!effectiveOrgId) {
       toast({
         title: 'Erro ao enviar anexos',
@@ -288,12 +291,12 @@ export function ModernPostForm({
       return;
     }
 
-    for (const file of attachments) {
-      // Validate file size (5MB max)
-      if (file.size > 5 * 1024 * 1024) {
+    for (const file of files) {
+      // Validar tamanho (aumentado para 25MB)
+      if (file.size > 25 * 1024 * 1024) {
         toast({
           title: 'Arquivo muito grande',
-          description: `${file.name} excede o limite de 5MB`,
+          description: `${file.name} excede o limite de 25MB`,
           variant: 'destructive',
         });
         continue;
@@ -303,15 +306,13 @@ export function ModernPostForm({
         // Upload to Supabase Storage with orgId prefix for RLS policies
         const fileExt = file.name.split('.').pop();
         const fileName = `${effectiveOrgId}/${postId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-        console.log("📁 Frontend Debug: Generated file_path for upload:", fileName);
-        console.log("   - orgId:", effectiveOrgId);
-        console.log("   - postId:", postId);
-        console.log("   - Padrão esperado: orgId/postId/filename");
-        const { data: uploadData, error: uploadError } = await supabase.storage
+        console.log('[PostForm] Uploading to storage', { fileName, type: file.type, size: file.size });
+        const { error: uploadError } = await supabase.storage
           .from('post-attachments')
           .upload(fileName, file);
 
         if (uploadError) {
+          console.error('[PostForm] Storage upload error:', uploadError.message);
           toast({
             title: 'Erro no upload',
             description: uploadError.message,
@@ -325,6 +326,7 @@ export function ModernPostForm({
         if (file.type.startsWith('video/')) assetKind = 'video';
         else if (file.type.includes('pdf') || file.type.includes('document')) assetKind = 'doc';
 
+        console.log('[PostForm] Inserting asset row');
         // Insert into assets table and get inserted row
         const { data: inserted, error: assetError } = await supabase
           .from('assets')
@@ -343,7 +345,7 @@ export function ModernPostForm({
           .single();
 
         if (assetError) {
-          console.error('Error inserting asset:', assetError);
+          console.error('[PostForm] Error inserting asset:', assetError);
           toast({
             title: 'Erro ao salvar anexo',
             description: assetError.message,
@@ -361,9 +363,10 @@ export function ModernPostForm({
             console.warn('Falha ao gerar URL assinada para asset', inserted.id, e);
           }
           setExistingAssets(prev => [...prev, inserted]);
+          console.log('[PostForm] Asset salvo com sucesso:', inserted.id);
         }
       } catch (error) {
-        console.error('Error uploading file:', error);
+        console.error('[PostForm] Error uploading file:', error);
         toast({
           title: 'Erro no upload',
           description: 'Falha ao fazer upload do arquivo',
@@ -374,7 +377,7 @@ export function ModernPostForm({
 
     toast({
       title: 'Anexos enviados',
-      description: `${attachments.length} arquivo(s) enviado(s) com sucesso`,
+      description: `${files.length} arquivo(s) enviado(s) com sucesso`,
     });
 
     try {
