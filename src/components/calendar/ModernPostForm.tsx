@@ -273,7 +273,15 @@ export function ModernPostForm({
   };
 
   const uploadAttachments = async (postId: string) => {
-    if (!orgId) return;
+    const effectiveOrgId = (orgId || (initialData as any)?.org_id) as string | undefined;
+    if (!effectiveOrgId) {
+      toast({
+        title: 'Erro ao enviar anexos',
+        description: 'Organização não encontrada.',
+        variant: 'destructive',
+      });
+      return;
+    }
 
     for (const file of attachments) {
       // Validate file size (5MB max)
@@ -289,9 +297,9 @@ export function ModernPostForm({
       try {
         // Upload to Supabase Storage with orgId prefix for RLS policies
         const fileExt = file.name.split('.').pop();
-        const fileName = `${orgId}/${postId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const fileName = `${effectiveOrgId}/${postId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
         console.log("📁 Frontend Debug: Generated file_path for upload:", fileName);
-        console.log("   - orgId:", orgId);
+        console.log("   - orgId:", effectiveOrgId);
         console.log("   - postId:", postId);
         console.log("   - Padrão esperado: orgId/postId/filename");
         const { data: uploadData, error: uploadError } = await supabase.storage
@@ -316,7 +324,7 @@ export function ModernPostForm({
         const { data: inserted, error: assetError } = await supabase
           .from('assets')
           .insert([{
-            org_id: orgId,
+            org_id: effectiveOrgId,
             post_id: postId,
             name: file.name,
             kind: assetKind,
@@ -337,7 +345,17 @@ export function ModernPostForm({
             variant: 'destructive',
           });
         } else if (inserted) {
-          console.log('Asset inserido com sucesso:', inserted.id);
+          try {
+            const { data: signed, error: signError } = await supabase.storage
+              .from('post-attachments')
+              .createSignedUrl(fileName, 60 * 60);
+            if (!signError && signed?.signedUrl) {
+              setAssetUrls(prev => ({ ...prev, [inserted.id]: signed.signedUrl }));
+            }
+          } catch (e) {
+            console.warn('Falha ao gerar URL assinada para asset', inserted.id, e);
+          }
+          setExistingAssets(prev => [...prev, inserted]);
         }
       } catch (error) {
         console.error('Error uploading file:', error);
