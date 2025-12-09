@@ -740,10 +740,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      can_access_client: {
-        Args: { client_id: string }
-        Returns: boolean
-      }
+      can_access_client: { Args: { client_id: string }; Returns: boolean }
       create_org_with_owner: {
         Args: { org_name: string; org_slug: string }
         Returns: string
@@ -752,18 +749,9 @@ export type Database = {
         Args: { target_org_id: string }
         Returns: undefined
       }
-      generate_share_token: {
-        Args: { target_org_id: string }
-        Returns: string
-      }
-      get_current_user_role: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      get_user_role_secure: {
-        Args: { user_id: string }
-        Returns: string
-      }
+      generate_share_token: { Args: { target_org_id: string }; Returns: string }
+      get_current_user_role: { Args: never; Returns: string }
+      get_user_role_secure: { Args: { user_id: string }; Returns: string }
       has_platform_role: {
         Args: {
           _role: Database["public"]["Enums"]["platform_role"]
@@ -771,22 +759,10 @@ export type Database = {
         }
         Returns: boolean
       }
-      hash_token: {
-        Args: { token_input: string }
-        Returns: string
-      }
-      is_platform_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      is_platform_owner: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      user_has_org_access: {
-        Args: { target_org_id: string }
-        Returns: boolean
-      }
+      hash_token: { Args: { token_input: string }; Returns: string }
+      is_platform_admin: { Args: never; Returns: boolean }
+      is_platform_owner: { Args: never; Returns: boolean }
+      user_has_org_access: { Args: { target_org_id: string }; Returns: boolean }
       user_org_role: {
         Args: { target_org_id: string }
         Returns: Database["public"]["Enums"]["user_role"]
