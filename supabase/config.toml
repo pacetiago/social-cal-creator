@@ -95,3 +95,6 @@ verify_jwt = true
 
 [functions.bulk-import-posts]
 verify_jwt = true
+
+[functions.bootstrap-user]
+verify_jwt = false
